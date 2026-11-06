@@ -168,9 +168,7 @@ export function validateManifest(manifest) {
     declared.some((permission) => !capabilities.has(permission))
   )
     throw new Error("Invalid required or optional permissions");
-  const [hostMajor, hostMinor, hostPatch] = manifest.minHostVersion
-    .split(".")
-    .map(Number);
+  const [hostMajor, hostMinor] = manifest.minHostVersion.split(".").map(Number);
   if (
     declared.some((permission) =>
       ["network:images", "network:system-proxy", "links:open"].includes(
@@ -178,17 +176,13 @@ export function validateManifest(manifest) {
       ),
     ) &&
     hostMajor === 0 &&
-    (hostMinor < 1 || (hostMinor === 1 && hostPatch < 6))
+    hostMinor < 1
   )
     throw new Error(
-      "Image resources, external links and system proxies require minHostVersion 0.1.6 or newer",
+      "Image resources, external links and system proxies require minHostVersion 0.1.0 or newer",
     );
-  if (
-    declared.includes("window:control") &&
-    hostMajor === 0 &&
-    (hostMinor < 1 || (hostMinor === 1 && hostPatch < 7))
-  )
-    throw new Error("Window control requires minHostVersion 0.1.7 or newer");
+  if (declared.includes("window:control") && hostMajor === 0 && hostMinor < 1)
+    throw new Error("Window control requires minHostVersion 0.1.0 or newer");
   const ids = new Set();
   for (const command of manifest.commands) {
     if (
@@ -246,10 +240,10 @@ export function validateManifest(manifest) {
     if (
       command.executionBudget === "compute" &&
       hostMajor === 0 &&
-      (hostMinor < 1 || (hostMinor === 1 && hostPatch < 7))
+      hostMinor < 1
     )
       throw new Error(
-        "Compute execution budget requires minHostVersion 0.1.7 or newer",
+        "Compute execution budget requires minHostVersion 0.1.0 or newer",
       );
     const size = command.ui?.windowSize;
     if (
@@ -262,8 +256,7 @@ export function validateManifest(manifest) {
         size.width > 1920 ||
         size.height < 480 ||
         size.height > 1440 ||
-        (hostMajor === 0 &&
-          (hostMinor < 1 || (hostMinor === 1 && hostPatch < 7))))
+        (hostMajor === 0 && hostMinor < 1))
     )
       throw new Error("Invalid UI window size or minimum host version");
     ids.add(command.id);

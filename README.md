@@ -1,25 +1,23 @@
 # Serial Workbench 插件市场
 
-配套 [Serial Workbench](https://github.com/YanChao001/serial-workbench) 的独立插件市场工程，保留基座市场的构建脚本、文档和参考插件源码。当前收录为空，生产公钥尚未配置，市场目录与自动发布均未启用。后续发布机制见 [发布与管理](./docs/publishing.md#actions-生产发布)。
+配套 [Serial Workbench](https://github.com/YanChao001/serial-workbench) 的 Wasm 插件市场（plugin marketplace），使用 Rust、WebAssembly 与 Extism，维护插件收录、包校验、签名目录和发布工具。
 
-插件最低宿主要求以各自 `extension.json` 为准。开发阶段按选定配套宿主验证，不承诺历史版本兼容；版本选择与发布顺序见 [固定配套宿主](./docs/publishing.md#固定配套宿主)。
+This repository contains the Wasm plugin marketplace and authoring tools for Serial Workbench, a Tauri desktop application for serial port debugging.
 
-当前收录清单为空，尚未发布市场目录；Git 从新的初提交开始，不继承基座市场历史。GitHub Actions 暂时停用。下列目录仅保留为开发参考源码，不属于已发布产品插件。
+当前收录清单为空，生产公钥待配置，GitHub Actions 停用。以下四个目录提供开发参考源码；市场启用步骤见 [发布与管理](./docs/publishing.md)。
 
 ## 开发参考源码
 
-| 插件                                                | 功能                                                                      | 权限                                   |
-| --------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------- |
-| [计算器](./plugins/scientific-calculator/README.md) | 五种计算模式、十三类转换器、记忆与历史、独立竖屏窗口                      | 可选私有存储、置顶、汇率网络与来源链接 |
-| [贪吃蛇](./plugins/snake/README.md)                 | Slither 移植：360°转向、冲刺与成长、离线 AI、皮肤、小地图、原版音效与重放 | 可选私有存储                           |
-| [内网通信](./plugins/lan-chat/README.md)            | 聊天式界面、文字 / 表情 / 图片 / 文件、送达回执、会话导出与本机回环测试   | 必需 `messaging:lan`                   |
-| [壁纸库](./plugins/wallpaper-browser/README.md)     | 四站壁纸搜索、分页去重、高清预览与下载、本机图库管理                      | 必需 `wallpapers:manage`               |
-
-计算器的五种模式与十二类单位转换、贪吃蛇均可离线使用，保存工作区或纪录需要可选私有存储。内网通信为明文 TCP，无远端身份认证，仅适合可信局域网。壁纸库拒绝联网仍可管理本机图库，背景仅作用于本应用，图片许可由原站决定。具体操作、数据与权限用途见各插件 README；网络及来源审核见 [安全规范](./docs/security.md#原生服务与外部来源)。
+| 插件                                                | 参考内容                           |
+| --------------------------------------------------- | ---------------------------------- |
+| [计算器](./plugins/scientific-calculator/README.md) | 科学计算、单位换算、汇率与私有存储 |
+| [贪吃蛇](./plugins/snake/README.md)                 | 游戏状态、输入、重放与自定义界面   |
+| [内网通信](./plugins/lan-chat/README.md)            | 局域网消息、附件与会话导出         |
+| [壁纸库](./plugins/wallpaper-browser/README.md)     | 图源搜索、下载与本机图库管理       |
 
 ## 快速开始
 
-首次编写插件按 [独立作者入口](./docs/plugin-authoring.md) 完成最小文本示例，再按 [开发指南](./docs/development.md) 迭代，按 [测试规范](./docs/testing.md#按改动选择检查) 验证改动，通过 [贡献流程](./CONTRIBUTING.md) 提交收录审查。签名发布由维护者从已审核源码执行。
+首次编写插件按 [独立作者入口](./docs/plugin-authoring.md) 完成最小示例，再按 [开发指南](./docs/development.md) 迭代，通过 [贡献流程](./CONTRIBUTING.md) 提交收录。
 
 市场可以独立检出，也可作为宿主的 `marketplace/` 子模块工作。Node 要求见 [package.json](./package.json)，Rust 版本见 [rust-toolchain.toml](./rust-toolchain.toml)。市场脚本没有 npm 依赖，以下命令从本仓库根目录运行：
 
@@ -27,21 +25,14 @@
 node --test scripts/*.test.mjs plugins/*/ui/*.test.mjs
 ```
 
-首次完整构建需要先准备宿主的无界面 `extension-tool` 和 Wasm 编译目标，按 [开发指南](./docs/development.md#准备宿主校验工具) 操作。工具就绪后，在 PowerShell 中运行：
-
-```powershell
-$env:MARKET_REVISION = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds().ToString()
-node scripts/check.mjs
-```
-
-`check` 编译全部收录插件、真实运行手写 fixture，并用一次性测试密钥核对目录及包；不使用生产签名密钥，也不发布线上目录。产物位于 `artifacts/market-<revision>/`，同一修订目录不能覆盖。其他 shell、单插件迭代与验证范围见 [开发指南](./docs/development.md) 和 [测试规范](./docs/testing.md)。
-
-四款插件均使用独立 Rust / Cargo 项目和自包含 HTML / CSS / JavaScript，没有 React / Vite 构建依赖。Wasm、界面与原生服务的分工，以及宿主 JS / TS 示例的适用范围见 [架构说明](./docs/architecture.md)。
-
-项目来源、配套宿主和文档链接统一由 [repository.config.json](./repository.config.json) 维护；修改后运行 `node scripts/repository-config.mjs sync` 与 `node scripts/repository-config.mjs check`。配置字段、同步范围和平台适配入口见 [仓库来源与平台入口](./docs/development.md#仓库来源与平台入口)。
+编译和真实运行 Wasm 前，按 [准备宿主校验工具](./docs/development.md#准备宿主校验工具) 安装 `extension-tool` 与 Wasm 编译目标。参考插件使用单插件验收；完整 `check` 构建并验证 `listings.json` 中的收录项，命令见 [开发指南](./docs/development.md)，检查范围见 [测试规范](./docs/testing.md#按改动选择检查)。
 
 ## 文档与贡献
 
-[文档索引](./docs/README.md) · [贡献流程](./CONTRIBUTING.md) · [智能体入口](./AGENTS.md) · [安全规范](./docs/security.md) · [MIT 许可](./LICENSE)
+[文档索引](./docs/README.md) · [贡献流程](./CONTRIBUTING.md) · [智能体入口](./AGENTS.md) · [安全规范](./docs/security.md)
 
-新增或修改插件先按贡献流程准备源码、清单、锁文件、手写测试与收录信息，再提交 PR。宿主协议、工具链和市场目录需要配套；发布、续签、下架及恢复统一见 [发布与管理](./docs/publishing.md)。签名表示维护者发布目录，不认证包内自述作者，也不自动授予权限。
+市场采用 GitHub Flow：短期分支通过 PR squash merge 合入 `main`。跨仓库协作见 [贡献流程](./CONTRIBUTING.md#分支提交与-pr)，宿主配套、签名与发布见 [发布与管理](./docs/publishing.md)。
+
+## 开源许可
+
+本仓库采用 [Apache License 2.0](./LICENSE)，版权说明见 [NOTICE](./NOTICE)。参考插件中使用的第三方组件沿用各自许可证；外部作者提交的插件须明确自身许可。

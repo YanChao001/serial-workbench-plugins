@@ -32,7 +32,7 @@ const key = () =>
 const manifest = () => ({
   formatVersion: 3,
   apiVersion: 2,
-  minHostVersion: "0.1.4",
+  minHostVersion: "0.1.0",
   id: "example.text",
   version: "1.0.0",
   name: "Text tool",
@@ -182,15 +182,16 @@ test("packaging enforces capability compatibility and preserves valid declaratio
   const wasm = Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]);
   const extension = {
     ...manifest(),
+    minHostVersion: "0.0.9",
     optionalPermissions: ["network:images", "network:system-proxy"],
   };
   assert.throws(
     () => packagePlugin(extension, wasm),
-    /require minHostVersion 0\.1\.6/,
+    /require minHostVersion 0\.1\.0/,
   );
   const supported = {
     ...extension,
-    minHostVersion: "0.1.6",
+    minHostVersion: "0.1.0",
   };
   assert.deepEqual(
     JSON.parse(packagePlugin(supported, wasm).content).manifest,
@@ -370,7 +371,10 @@ test("signed UI metadata binds exact HTML independently of the Wasm hash", async
   const wasm = Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]),
     html = "<!doctype html><main>Original UI</main>";
   const packed = packagePlugin(extension, wasm, { main: html });
-  assert.equal(packed.preview.uiDocuments[0].sha256, hash(Buffer.from(html)));
+  assert.equal(
+    packed.preview.uiDocuments[0].sha256,
+    hash(Buffer.from(JSON.parse(packed.content).uiDocuments.main)),
+  );
   assert.throws(() => packagePlugin(extension, wasm, {}));
   assert.throws(() =>
     packagePlugin(extension, wasm, { main: html, unused: "extra" }),
@@ -409,6 +413,112 @@ test("signed UI metadata binds exact HTML independently of the Wasm hash", async
   entry.packageBytes = changed.length;
   await assert.rejects(verifyRelease(directory, options()), /mismatch/);
 });
+
+test("downloaded UI packages retain complete project licenses without replacing third-party notices", () => {
+  const extension = manifest();
+  extension.commands = [
+    {
+      ...extension.commands[0],
+      inputFormat: "json",
+      resultFormat: "view",
+      ui: { sidebar: true, window: true, document: "main" },
+    },
+  ];
+  const html =
+    "<!doctype html>\n<!-- Existing third-party notice -->\n<main>Plugin UI</main>";
+  const packed = packagePlugin(
+    extension,
+    Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]),
+    { main: html },
+  );
+  const content = JSON.parse(packed.content);
+  const packagedHtml = content.uiDocuments.main;
+  assert.ok(packagedHtml.includes(html));
+  for (const path of ["LICENSE", "NOTICE"]) {
+    const license = readFileSync(
+      new URL(`../${path}`, import.meta.url),
+      "utf8",
+    );
+    assert.ok(packagedHtml.includes(license), `Plugin package omitted ${path}`);
+  }
+  assert.equal(
+    packed.preview.uiDocuments[0].sha256,
+    hash(Buffer.from(packagedHtml)),
+  );
+  assert.equal(
+    packed.preview.uiDocuments[0].bytes,
+    Buffer.byteLength(packagedHtml),
+  );
+  assert.deepEqual(Object.keys(content).sort(), [
+    "manifest",
+    "uiDocuments",
+    "wasm",
+  ]);
+  const verified = packagePlugin(
+    content.manifest,
+    Buffer.from(content.wasm, "base64"),
+    content.uiDocuments,
+  );
+  assert.deepEqual(verified.content, packed.content);
+});
+
+test("a partial project license marker cannot suppress complete license text during packaging", () => {
+  const extension = manifest();
+  extension.commands = [
+    {
+      ...extension.commands[0],
+      inputFormat: "json",
+      resultFormat: "view",
+      ui: { sidebar: true, window: true, document: "main" },
+    },
+  ];
+  const html =
+    "<main>Plugin UI</main>\n<!-- Serial Workbench project licenses\nplaceholder\n-->\n";
+  const packed = packagePlugin(
+    extension,
+    Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]),
+    { main: html },
+  );
+  const document = JSON.parse(packed.content).uiDocuments.main;
+  for (const path of ["LICENSE", "NOTICE"]) {
+    assert.ok(
+      document.includes(
+        readFileSync(new URL(`../${path}`, import.meta.url), "utf8"),
+      ),
+      `Partial marker suppressed ${path}`,
+    );
+  }
+});
+
+for (const directory of [
+  "scientific-calculator",
+  "snake",
+  "lan-chat",
+  "wallpaper-browser",
+]) {
+  test(`${directory} packaging retains its real HTML and complete licenses within the document limit`, () => {
+    const source = new URL(`../plugins/${directory}/`, import.meta.url);
+    const extension = JSON.parse(
+      readFileSync(new URL("extension.json", source), "utf8"),
+    );
+    const html = readFileSync(new URL("ui/main.html", source), "utf8");
+    const packed = packagePlugin(
+      extension,
+      Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]),
+      { main: html },
+    );
+    const document = JSON.parse(packed.content).uiDocuments.main;
+    assert.ok(document.startsWith(html));
+    for (const path of ["LICENSE", "NOTICE"]) {
+      assert.ok(
+        document.includes(
+          readFileSync(new URL(`../${path}`, import.meta.url), "utf8"),
+        ),
+      );
+    }
+    assert.ok(Buffer.byteLength(document) <= 512 * 1024);
+  });
+}
 
 test("compilation and host processes never inherit signing credentials", () => {
   assert.deepEqual(

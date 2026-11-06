@@ -45,7 +45,7 @@ const privateKey = () =>
 const manifest = () => ({
   formatVersion: 3,
   apiVersion: 2,
-  minHostVersion: "0.1.5",
+  minHostVersion: "0.1.0",
   id: "example.test",
   version: "1.0.0",
   name: "Test",
@@ -84,14 +84,18 @@ async function temporary(context) {
   });
   return directory;
 }
-async function releaseFixture(context) {
+async function releaseFixture(context, { ui = true } = {}) {
   const directory = await temporary(context),
     extension = manifest(),
     html = "<main>Reviewed UI 中文</main>";
+  if (!ui) {
+    extension.commands[0].resultFormat = "text";
+    delete extension.commands[0].ui;
+  }
   const packed = packagePlugin(
     extension,
     Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]),
-    { main: html },
+    ui ? { main: html } : {},
   );
   const entry = {
     package: packed.preview,
@@ -262,6 +266,12 @@ test("production signing verifies embedded package metadata and reviewed UI befo
     ),
     writeFile(join(plugin, "ui", "main.html"), fixture.html),
   ]);
+  for (const path of ["LICENSE", "NOTICE"]) {
+    await writeFile(
+      join(repositoryRoot, path),
+      await readFile(join(root, path)),
+    );
+  }
   const assetPath = join(fixture.directory, fixture.entry.asset);
   const changed = Buffer.from(
     fixture.packed.content.toString().replace("Reviewed UI", "Tampered UI"),
@@ -306,10 +316,72 @@ test("production signing verifies embedded package metadata and reviewed UI befo
   await verifyRelease(fixture.directory, {
     encodedKey: publicKey(fixture.key),
   });
+  const signed = JSON.parse(
+    await readFile(join(fixture.directory, "catalog.json"), "utf8"),
+  );
+  const reviewed = verifyCatalog(signed, publicKey(fixture.key));
+  assert.deepEqual(
+    reviewed.entries[0].package.uiDocuments,
+    fixture.packed.preview.uiDocuments,
+  );
   await assert.rejects(
     signRelease(fixture.directory, { repositoryRoot, privateKey: fixture.key }),
     /EEXIST/,
   );
+});
+
+test("pure Wasm publication uploads all project license files with the verified package snapshot", async (context) => {
+  const fixture = await releaseFixture(context, { ui: false });
+  assert.equal(JSON.parse(fixture.packed.content).uiDocuments, undefined);
+  fixture.metadata.repository = JSON.parse(
+    await readFile(join(root, "listings.json"), "utf8"),
+  ).repository;
+  await writeFile(
+    join(fixture.directory, "catalog.json"),
+    JSON.stringify(signCatalog(fixture.metadata, fixture.key)),
+  );
+  const previous = process.env.MARKET_SOURCE_SHA;
+  process.env.MARKET_SOURCE_SHA = sourceSha;
+  const previousGithubSha = process.env.GITHUB_SHA;
+  delete process.env.GITHUB_SHA;
+  context.after(() => {
+    if (previous === undefined) delete process.env.MARKET_SOURCE_SHA;
+    else process.env.MARKET_SOURCE_SHA = previous;
+    if (previousGithubSha !== undefined)
+      process.env.GITHUB_SHA = previousGithubSha;
+  });
+  let uploaded = false;
+  await publish(fixture.directory, {
+    encodedKey: publicKey(fixture.key),
+    git: (args) =>
+      args[1] === "--is-shallow-repository"
+        ? "false"
+        : args[0] === "rev-parse"
+          ? sourceSha
+          : "",
+    run: (args) => {
+      if (args[1] === "upload") {
+        uploaded = true;
+        const packagePath = args.find((argument) =>
+          argument.endsWith(fixture.entry.asset),
+        );
+        const snapshot = dirname(packagePath);
+        assert.deepEqual(readFileSync(packagePath), fixture.packed.content);
+        for (const path of ["LICENSE", "NOTICE"]) {
+          assert.ok(
+            args.includes(join(snapshot, path)),
+            `Release upload omitted ${path}`,
+          );
+          assert.deepEqual(
+            readFileSync(join(snapshot, path)),
+            readFileSync(join(root, path)),
+          );
+        }
+      }
+      return args[0] === "api" ? "[]" : "";
+    },
+  });
+  assert.equal(uploaded, true);
 });
 
 test("release history is paginated and an older high revision outside the newest page prevents writes", () => {

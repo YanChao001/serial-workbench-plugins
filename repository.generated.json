@@ -18,8 +18,8 @@
     "host": {
       "repository": "YanChao001/serial-workbench",
       "repositoryUrl": "https://github.com/YanChao001/serial-workbench",
-      "docsRef": "develop",
-      "defaultRef": "develop"
+      "docsRef": "main",
+      "defaultRef": "main"
     },
     "wallpaperUserAgentTemplate": "SerialWorkbenchWallpaper/2.0 ({repositoryUrl})"
   }

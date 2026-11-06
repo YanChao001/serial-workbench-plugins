@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { publicKey, signCatalog } from "./signing.mjs";
-import { hash, validateListings } from "./build.mjs";
+import { hash, licensedUiDocument, validateListings } from "./build.mjs";
 import { CATALOG_LIFETIME, validateCatalog } from "./protocol.mjs";
 import { assertUnlinkedPath, parseJson, readBounded } from "./files.mjs";
 import { verifyAssets } from "./verify.mjs";
@@ -71,7 +71,7 @@ export async function signRelease(
       throw new Error("Catalog does not match reviewed listings");
     ids.add(approved.id);
     for (const document of entry.package.uiDocuments ?? []) {
-      const bytes = await readBounded(
+      const source = await readBounded(
         join(
           repositoryRoot,
           "plugins",
@@ -80,6 +80,14 @@ export async function signRelease(
           `${document.id}.html`,
         ),
         512 * 1024,
+      );
+      const bytes = Buffer.from(
+        licensedUiDocument(
+          new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+            source,
+          ),
+          repositoryRoot,
+        ),
       );
       if (bytes.length !== document.bytes || hash(bytes) !== document.sha256)
         throw new Error("Catalog UI does not match reviewed source");

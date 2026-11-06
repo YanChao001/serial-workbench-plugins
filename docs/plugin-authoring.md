@@ -1,51 +1,51 @@
 # 独立插件作者入口
 
-本页面向只取得市场仓库、尚不了解宿主实现的作者。插件应依赖公开协议、SDK 和校验工具；编写插件不要求阅读宿主 React、Tauri 或 Rust 服务的内部实现。市场收录目前支持 Rust + Extism PDK 编译的 Wasm，以及可选的自包含 HTML / CSS / JavaScript 界面。
+从市场仓库开始，使用公开协议、SDK 和校验工具编写插件。现有构建流程支持 Rust + Extism PDK 编译的 Wasm，以及可选的自包含 HTML / CSS / JavaScript 界面。
 
 ## 当前能独立完成什么
 
-**当前市场仓库还不是完整的独立开发套件。** 这里已有业务示例、构建打包和测试说明，但完整公开协议与界面 SDK 仍位于宿主仓库；完整离线检查需要宿主提供的 `extension-tool`。宿主源码依赖主要来自工具的构建方式，不表示作者必须理解其实现。
+市场仓库提供参考源码、构建打包脚本和测试说明；公开协议、界面 SDK 与 `extension-tool` 由宿主仓库提供。按下面的分工准备材料：
 
-| 材料或操作                                         | 当前提供方式                                                | 作者需要做什么                                                                                                                                         |
-| -------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Rust 插件、HTML 界面、手写 fixture、许可和权限示例 | 本仓库 `plugins/` 与[开发指南](./development.md)            | 按实际业务参考，避免复制无关权限与功能                                                                                                                 |
-| 编译插件 Wasm、原生业务单测                        | 本仓库 Rust 工具链与各插件锁文件                            | 安装 Rust 和 Wasm 目标，不需要编译宿主界面                                                                                                             |
-| 清单、输入输出、视图、effects 与服务的完整公共约定 | 下表链接的宿主文档与 SDK                                    | 对照与工具一致的宿主提交；不要根据内部实现猜协议                                                                                                       |
-| UI 类型声明                                        | 宿主 `sdk/extension-ui.d.ts` 及其 `generated/protocol.d.ts` | 按[宿主 SDK 说明](https://github.com/YanChao001/serial-workbench/blob/v0.1.8/sdk/README.md)一并取得，与工具保持同一宿主提交                       |
-| 清单 / ABI / 视图校验、真实 Wasm fixture           | 配套 `extension-tool` 二进制                                | 当前按[准备宿主校验工具](./development.md#准备宿主校验工具)检出并构建宿主，或由维护者提供同一提交构建的可信工具；尚无本页可指向的预编译 CLI 下载发行物 |
-| 本地包安装、授权、真实网络 / 存储 / 原生窗口       | 配套已构建或已安装的原生宿主                                | 从生成包进行交互验收；CLI 和浏览器替身不能证明这些操作成功                                                                                             |
+| 材料或操作                                         | 当前提供方式                                                | 作者需要做什么                                                                                    |
+| -------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Rust 插件、HTML 界面、手写 fixture、许可和权限示例 | 本仓库 `plugins/` 与[开发指南](./development.md)            | 按业务选择参考内容与所需权限                                                                      |
+| 编译插件 Wasm、原生业务单测                        | 本仓库 Rust 工具链与各插件锁文件                            | 安装 Rust 和 Wasm 目标                                                                            |
+| 清单、输入输出、视图、effects 与服务契约           | 下表链接的宿主文档与 SDK                                    | 使用与校验工具相同宿主提交的材料                                                                  |
+| UI 类型声明                                        | 宿主 `sdk/extension-ui.d.ts` 及其 `generated/protocol.d.ts` | 按[宿主 SDK 说明](https://github.com/YanChao001/serial-workbench/blob/main/sdk/README.md)一并取得 |
+| 清单 / ABI / 视图校验、真实 Wasm fixture           | 配套 `extension-tool` 二进制                                | 按[准备宿主校验工具](./development.md#准备宿主校验工具)构建，或使用维护者从同一提交构建的可信工具 |
+| 安装、授权、网络、存储与原生窗口                   | 配套原生宿主                                                | 导入生成包，按[验收范围](./testing.md#按改动选择检查)验证实际操作                                 |
 
-单独 clone 市场后可以编写和编译 Rust 业务、运行原生单测以及脚本 / 界面回归；取得工具前不能完成权威 Wasm 验收与完整 `check`。JS / TS 编译为 Wasm 的宿主示例不属于本市场现有自动构建入口，区别见[语言与界面](./development.md#rustjavascripttypescript-与界面)。
+单独检出市场后即可编写和编译 Rust 业务，运行原生单测及脚本 / 界面回归；真实 Wasm 验收与完整 `check` 还需上述工具。宿主的 JS / TS Wasm 示例及市场支持范围见[语言与界面](./development.md#rustjavascripttypescript-与界面)。
 
 ## 作者需要的公开契约
 
-本页公开协议、SDK 和类型链接固定到宿主 `v0.1.8` 标签，以该标签的源码契约为基线，不要求阅读实现文件。源码标签不表示安装包已经公开，下载与安装状态以实际 [Release](https://github.com/YanChao001/serial-workbench/releases/tag/v0.1.8) 为准。测试更新的宿主源码时，先确认完整 40 位提交 SHA，再同步取得该提交的文档、SDK 和 `extension-tool`，保存材料来源；本地未提交源码不能冒充该 SHA 的已发布内容。最低宿主版本与源码 SHA 的不同职责见[固定配套宿主](./publishing.md#固定配套宿主)。
+本页宿主链接指向当前 `main`，现有协议与能力的最低宿主基线为 `0.1.0`。收录与发布时按[固定配套宿主](./publishing.md#固定配套宿主)选定完整 40 位提交 SHA，并使用该提交的文档、SDK 与 `extension-tool`；安装包的可用版本查阅宿主 [Release](https://github.com/YanChao001/serial-workbench/releases)。
 
-| 开发问题                       | 公开契约入口                                                                                                                                                                                                                               | 需要核对的内容                                                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| 如何声明与调用文本 / JSON 命令 | [包与输入契约](https://github.com/YanChao001/serial-workbench/blob/v0.1.8/docs/extensions.md#%E5%8C%85%E4%B8%8E%E8%BE%93%E5%85%A5%E5%A5%91%E7%BA%A6)                                                                                                                            | 清单字段、导出名、输入 / 结果格式、必需与可选权限、用户主动提交的数据                                            |
-| 如何返回标准界面并处理动作     | [应用插件协议](https://github.com/YanChao001/serial-workbench/blob/v0.1.8/docs/extensions.md#%E5%BC%80%E5%8F%91%E5%B8%A6%E7%95%8C%E9%9D%A2%E7%9A%84%E5%BA%94%E7%94%A8%E6%8F%92%E4%BB%B6)                                                                                                                    | `version`、`action`、`state`、`fields`、`locale`、视图字段 / 动作 / 块 / 产物、额度和未知状态拒写                |
-| 如何请求网络与存储             | [网络、凭据与私有数据](https://github.com/YanChao001/serial-workbench/blob/v0.1.8/docs/extensions.md#%E7%BD%91%E7%BB%9C%E5%87%AD%E6%8D%AE%E4%B8%8E%E7%A7%81%E6%9C%89%E6%95%B0%E6%8D%AE)                                                                                                              | HTTP 来源 / 方法 / 代理授权、凭据引用、storage revision、effect ID、`host-result` 回执与失败保留草稿             |
-| 如何编写自定义 HTML            | [界面 SDK](https://github.com/YanChao001/serial-workbench/blob/v0.1.8/sdk/README.md)、[公共类型](https://github.com/YanChao001/serial-workbench/tree/v0.1.8/sdk)                                                                 | `starter` 方法、snapshot、主题 / 语言 / active、检查点、失败与取消；运行时由宿主注入，无需复制 JS 或访问原生 IPC |
-| 如何使用桌面能力               | [受控桌面服务](https://github.com/YanChao001/serial-workbench/blob/v0.1.8/docs/extensions.md#%E5%8F%97%E6%8E%A7%E6%A1%8C%E9%9D%A2%E6%9C%8D%E5%8A%A1)                                                                                                                            | `lan`、`wallpaper`、`resources`、`links`、`window` 的操作、请求 / 响应、权限、窗口归属与资源释放                 |
-| 执行有什么限制                 | [执行、存储与生命周期](https://github.com/YanChao001/serial-workbench/blob/v0.1.8/docs/extensions.md#%E6%89%A7%E8%A1%8C%E5%AD%98%E5%82%A8%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)、[自定义界面](https://github.com/YanChao001/serial-workbench/blob/v0.1.8/docs/extensions.md#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%95%8C%E9%9D%A2) | 每次新 Wasm 实例、预算 / 队列 / 取消、界面隐藏与卸载、在途副作用和安装代次                                       |
-| 如何证明输出符合约定           | 本仓库[真实 Wasm 与手写 fixture](./testing.md#真实-wasm-与手写-fixture)                                                                                                                                                                    | 断言格式、逐条显式输入、真实 worker 校验；合成 host 上下文不会执行真实服务                                       |
+| 开发问题                       | 公开契约入口                                                                                                                                                                                                                                                                                                                   | 需要核对的内容                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| 如何声明与调用文本 / JSON 命令 | [包与输入契约](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E5%8C%85%E4%B8%8E%E8%BE%93%E5%85%A5%E5%A5%91%E7%BA%A6)                                                                                                                                                                             | 清单字段、导出名、输入 / 结果格式、必需与可选权限、用户主动提交的数据                                            |
+| 如何返回标准界面并处理动作     | [应用插件协议](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E5%BC%80%E5%8F%91%E5%B8%A6%E7%95%8C%E9%9D%A2%E7%9A%84%E5%BA%94%E7%94%A8%E6%8F%92%E4%BB%B6)                                                                                                                                         | `version`、`action`、`state`、`fields`、`locale`、视图字段 / 动作 / 块 / 产物、额度和未知状态拒写                |
+| 如何请求网络与存储             | [网络、凭据与私有数据](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E7%BD%91%E7%BB%9C%E5%87%AD%E6%8D%AE%E4%B8%8E%E7%A7%81%E6%9C%89%E6%95%B0%E6%8D%AE)                                                                                                                                          | HTTP 来源 / 方法 / 代理授权、凭据引用、storage revision、effect ID、`host-result` 回执与失败保留草稿             |
+| 如何编写自定义 HTML            | [界面 SDK](https://github.com/YanChao001/serial-workbench/blob/main/sdk/README.md)、[公共类型](https://github.com/YanChao001/serial-workbench/tree/main/sdk)                                                                                                                                                                   | `starter` 方法、snapshot、主题 / 语言 / active、检查点、失败与取消；运行时由宿主注入，无需复制 JS 或访问原生 IPC |
+| 如何使用桌面能力               | [受控桌面服务](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E5%8F%97%E6%8E%A7%E6%A1%8C%E9%9D%A2%E6%9C%8D%E5%8A%A1)                                                                                                                                                                             | `lan`、`wallpaper`、`resources`、`links`、`window` 的操作、请求 / 响应、权限、窗口归属与资源释放                 |
+| 执行有什么限制                 | [执行、存储与生命周期](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E6%89%A7%E8%A1%8C%E5%AD%98%E5%82%A8%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)、[自定义界面](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%95%8C%E9%9D%A2) | 每次新 Wasm 实例、预算 / 队列 / 取消、界面隐藏与卸载、在途副作用和安装代次                                       |
+| 如何证明输出符合约定           | 本仓库[真实 Wasm 与手写 fixture](./testing.md#真实-wasm-与手写-fixture)                                                                                                                                                                                                                                                        | 断言格式、逐条显式输入、真实 worker 校验；合成 host 上下文不会执行真实服务                                       |
 
-宿主 UI 类型已覆盖视图及部分服务，`lan` / `wallpaper` 仍接受 `Record<string, unknown>` 并返回 `unknown`；字段、错误码与取消语义需对照同一宿主提交的公开服务说明。契约未明确的新操作先由维护者补齐，不能凭宽泛类型或内部命令字符串推断支持范围。增加服务操作或权限还需配套宿主实现。
+`lan` / `wallpaper` 的 SDK 类型仍以 `Record<string, unknown>` 接收请求并返回 `unknown`；按同一宿主提交的公开服务说明核对字段、错误码与取消语义。新增操作或权限需先补齐宿主实现与公共契约。
 
 ## 界面与宿主保持一致
 
-市场插件的普通界面遵循 [宿主共同外观规范](https://github.com/YanChao001/serial-workbench/blob/develop/docs/conventions/ui-guidelines.md#%E5%AE%BF%E4%B8%BB%E4%B8%8E%E6%8F%92%E4%BB%B6%E7%9A%84%E5%85%B1%E5%90%8C%E5%A4%96%E8%A7%82)，嵌入页面与独立窗口均适用。作者维护业务布局、内容与专用绘制；通用控件的字体、尺寸、圆角、边框、材质和状态直接消费宿主统一注入的规则，不复制宿主 CSS 或在插件中另写一份默认主题。已有插件代码只作业务示例，其局部 CSS 覆盖造成的差异不能自动视为应沿用的设计。
+嵌入页面与独立窗口的普通界面均遵循[宿主共同外观规范](https://github.com/YanChao001/serial-workbench/blob/main/docs/conventions/ui-guidelines.md#%E5%AE%BF%E4%B8%BB%E4%B8%8E%E6%8F%92%E4%BB%B6%E7%9A%84%E5%85%B1%E5%90%8C%E5%A4%96%E8%A7%82)。作者维护业务布局、内容与专用绘制；通用控件直接使用宿主注入的字体、尺寸、圆角、边框、材质与状态。共享样式、主题变化和 Shadow DOM 接入见[SDK 默认外观](https://github.com/YanChao001/serial-workbench/blob/main/sdk/README.md#%E9%BB%98%E8%AE%A4%E5%A4%96%E8%A7%82%E4%B8%8E%E5%8A%A8%E6%95%88)。
 
-整套游戏界面、图表或专用操作区等确有独立视觉需求时，在对应插件 README 说明目的和适用区域；范围之外的普通设置、菜单与输入仍与宿主一致。[贪吃蛇的统一游戏视觉](../plugins/snake/README.md#视觉音效与平台边界) 包含其配套菜单、HUD、音量与皮肤设置，属于已声明的整套设计例外。例外也要验证文字可读、键盘、主题与减少动效，不能以设计差异绕过交互要求。
+游戏、图表或专用操作区采用独立视觉时，在插件 README 说明目的与范围，其余控件沿用宿主规则。例如[贪吃蛇的统一游戏视觉](../plugins/snake/README.md#视觉音效与平台边界)覆盖菜单、HUD、音量与皮肤设置。
 
-完整共享 CSS、运行时主题变化及显式 Shadow DOM 接入由配套宿主 [SDK 默认外观](https://github.com/YanChao001/serial-workbench/blob/develop/sdk/README.md#%E9%BB%98%E8%AE%A4%E5%A4%96%E8%A7%82%E4%B8%8E%E5%8A%A8%E6%95%88) 维护；按前文取得与实际测试宿主一致的文档和 SDK，不自行注入第二份样式。界面验收对照真实宿主组件与实际插件内容，不复制样式常量作为期望值；相关入口见 [自定义界面无头回归](./testing.md#自定义界面无头回归)。已有检查不代表任意业务 CSS 都已符合规范，仍须审查本次变更的实际界面及例外范围。
+按[自定义界面无头回归](./testing.md#自定义界面无头回归)检查实际内容与宿主组件的外观、文字可读性、键盘、主题和减少动效；独立视觉区域也适用这些交互要求。
 
 ## 第一个文本插件
 
-以下示例把用户主动提交的文本转换为大写，保留中文字符，只申请 `text:read`，不联网或持久化。该权限不可省略：真实宿主会拒绝未获文本权限的非空输入；离线 fixture 直接提供输入，不能替代实际授权验收。
+以下示例把用户主动提交的文本转换为大写，保留中文字符。它只需 `text:read`；该权限用于真实宿主中的非空文本输入，安装后需授权。
 
-从市场仓库根目录手工建立 `examples/author-text/src/`，按下面路径保存五个 UTF-8 文件。该目录由你新建，供本地练习；不要把生成的包或构建输出提交到源码目录。不修改 `listings.json`，也不会进入生产市场构建。实际提交时再按[新增插件](./development.md#新增一个插件)迁入自己的 `plugins/<directory>/`。
+从市场仓库根目录建立 `examples/author-text/src/`，按下面路径保存五个 UTF-8 文件。本地练习使用这个目录，构建输出写入 `target/`，安装包写入 `artifacts/`；准备收录时再按[新增插件](./development.md#新增一个插件)迁入 `plugins/<directory>/` 并登记 `listings.json`。
 
 `examples/author-text/Cargo.toml`：
 
@@ -54,7 +54,7 @@
 name = "starter-extism-author-text"
 version = "1.0.0"
 edition = "2024"
-license = "MIT"
+license = "Apache-2.0"
 publish = false
 
 [lib]
@@ -86,7 +86,7 @@ pub fn uppercase(input: String) -> FnResult<String> {
 {
   "formatVersion": 3,
   "apiVersion": 2,
-  "minHostVersion": "0.1.8",
+  "minHostVersion": "0.1.0",
   "id": "example.author-text",
   "version": "1.0.0",
   "name": "文本大写",
@@ -114,7 +114,7 @@ pub fn uppercase(input: String) -> FnResult<String> {
 { "artifact": "starter_extism_author_text.wasm" }
 ```
 
-市场自动构建按这个文件找到 Cargo 产物；下方练习使用相同的显式文件名，不修改市场收录清单。
+`build.json` 声明收录构建时的 Cargo 产物名，下方练习直接使用同一文件名。
 
 `examples/author-text/smoke.json`：
 
@@ -141,7 +141,7 @@ cargo fmt --manifest-path examples/author-text/Cargo.toml -- --check
 cargo build --locked --release --target wasm32-unknown-unknown --manifest-path examples/author-text/Cargo.toml --target-dir target/author-text-build
 ```
 
-保留生成的 `Cargo.lock`；已有插件依赖未变化时不重复生成锁文件。以上只证明插件可编译。按[准备宿主校验工具](./development.md#准备宿主校验工具)设置 `STARTER_EXTENSION_TOOL` 后，将下面内容保存为 `examples/author-text/check.mjs`，仍从市场根目录执行 `node examples/author-text/check.mjs`：
+保留生成的 `Cargo.lock`，以后使用 `--locked` 构建。编译成功后，按[准备宿主校验工具](./development.md#准备宿主校验工具)设置 `STARTER_EXTENSION_TOOL`，将下面内容保存为 `examples/author-text/check.mjs`，从市场根目录执行 `node examples/author-text/check.mjs`：
 
 ```javascript
 import { writeFile } from "node:fs/promises";
@@ -170,10 +170,6 @@ await writeFile(
 console.log("真实 Wasm 用例通过，已生成本地安装包。");
 ```
 
-该入口使用权威工具验证同一份清单 / Wasm 字节快照，再将已检查字节交给市场现有打包函数。安装包位于 `artifacts/author-text/`，Cargo 缓存仍在 `target/author-text-build/`。输出文件已存在时拒绝覆盖；重新练习时选择新输出文件名或先检查并移走自己的旧练习包。脚本不签名市场目录、不发布 Release。
+脚本运行真实 Wasm 用例，再将已检查的清单与 Wasm 字节打包到 `artifacts/author-text/`。输出文件已存在时，选择新文件名，或检查并移走旧练习包后重跑。
 
-在配套原生宿主中导入生成的 `.starter-extension.json`，审阅插件与文本权限后启用，输入中英文并执行“转换为大写”。安装、授权、真实输入与结果展示属于单独的交互验收，本页离线命令不代替它。实际业务插件还需补齐原生规则单测、错误处理和适用的[验收范围](./testing.md#按改动选择检查)。
-
-## 完整独立开发套件应如何交付
-
-版本化契约与预编译 CLI 属于独立的宿主发行工作，不是当前插件收录的额外前提。若后续提供下载入口，应说明可信来源、宿主版本与完整 SHA、文件摘要和运行依赖，并用同一版本的公开材料验证作者流程；实际交付后再更新本页。当前按 [准备宿主校验工具](./development.md#准备宿主校验工具) 取得工具。
+在配套原生宿主的插件中心导入生成的 `.starter-extension.json`，审阅插件与文本权限后启用，输入中英文并执行“转换为大写”，完成安装、授权与结果展示的交互验收。实际业务插件再按[验收范围](./testing.md#按改动选择检查)补齐规则单测、错误处理与相关服务检查。

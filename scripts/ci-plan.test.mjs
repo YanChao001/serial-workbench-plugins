@@ -28,6 +28,8 @@ test("unrelated documentation, tests and CI orchestration skip native builds; pa
     "scripts/host-tool.mjs",
     "listings.json",
     "rust-toolchain.toml",
+    "LICENSE",
+    "NOTICE",
     "unknown-input.json",
   ])
     assert.equal(requiresFullCheck([path]), true, path);

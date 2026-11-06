@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">=24"
   },
@@ -14,5 +14,16 @@
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs",
     "verify": "node scripts/verify.mjs"
-  }
+  },
+  "keywords": [
+    "serial-workbench",
+    "plugin-marketplace",
+    "wasm",
+    "webassembly",
+    "wasm-plugins",
+    "extism",
+    "rust",
+    "tauri",
+    "plugin-system"
+  ]
 }

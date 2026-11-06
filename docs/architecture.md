@@ -1,8 +1,8 @@
 # 市场与插件架构
 
-本仓库维护可审核的插件源码、收录清单和签名目录的构建发布流程。桌面宿主负责安装、授权、执行、界面和用户数据。两者独立发布，通过扩展包与签名市场目录连接；把本仓库作为宿主的子模块使用，不会让它成为应用的运行时依赖。
+本仓库维护插件源码、收录清单和签名目录的构建发布流程。桌面宿主负责安装、授权、执行、界面和用户数据。两者独立发布，通过扩展包与签名市场目录连接；子模块用于协同开发。
 
-插件开发与验收从[文档索引](./README.md)和[开发指南](./development.md)进入。包、视图与 effect 的完整协议由宿主的[扩展指南](https://github.com/YanChao001/serial-workbench/blob/develop/docs/extensions.md)维护；修改协议时必须核对实际使用的宿主提交，不能只修改市场侧 JSON 检查来放行。
+包、视图与 effect 协议由配套宿主的[扩展指南](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md)及 Rust 实现维护。市场侧使用固定宿主提交的工具验收，准备步骤见[开发指南](./development.md)。
 
 ## 从源码到已安装插件
 
@@ -11,7 +11,7 @@ flowchart TD
   S[审核后的源码、锁文件、清单与测试] --> B[编译 Wasm]
   B --> F[固定清单、Wasm、HTML、fixture 字节快照]
   F --> H[宿主 extension-tool 校验与真实执行]
-  H --> U[扩展包与未签名目录]
+  H --> U[附加许可、计算摘要、生成扩展包与未签名目录]
   U --> C[check：临时密钥签名并离线验签]
   U --> P[发布任务：生产密钥签名并复核附件]
   P --> D[草稿 Release 上传完整附件]
@@ -20,25 +20,23 @@ flowchart TD
   V --> I[用户确认安装、授权并启用]
 ```
 
-`check` 用一次性内存密钥做离线验收，不生成可发布的 `catalog.json`。生产签名由独立任务完成，草稿附件上传完整后才公开为 `latest`；步骤见 [发布指南](./publishing.md#actions-生产发布)。
+`check` 用一次性内存密钥做离线验收，输出未签名目录。生产签名由独立任务完成，草稿附件上传完整后才公开为 `latest`；当前启用状态与步骤见 [发布指南](./publishing.md#actions-生产发布)。
 
-`host-tool.mjs` 有界读取清单、Wasm、引用的 UI 文档和 fixture，将同一快照交给宿主 `test` 并打包。完整包哈希覆盖下载文件，模块哈希覆盖其中的 Wasm；校验范围见 [测试规范](./testing.md#真实-wasm-与手写-fixture)。
+`host-tool.mjs` 有界读取清单、Wasm、引用的 UI 源码和 fixture，将快照交给宿主 `test`。打包随后向 HTML 附加项目许可全文，再计算 UI 和完整包摘要；模块摘要覆盖 Wasm。签名时以同一追加逻辑对照审核过的 HTML 源码，分发方式见 [发布指南](./publishing.md#actions-生产发布)。
 
-客户端独立核验目录、包、兼容性和安装来源；签名不代替源码审核或用户授权。完整信任要求见 [安全规范](./security.md#信任与职责)。
+客户端核验目录、包、兼容性和安装来源，用户确认安装与授权。各方职责见 [安全规范](./security.md#信任与职责)。
 
 ## 语言与 Wasm
 
-宿主接收符合 Extism ABI、导入 / 导出约束和资源限制的 Wasm，不直接运行业务源文件。其他语言须先证明其工具链能生成可通过宿主静态与真实执行校验的模块。
+宿主执行符合 Extism ABI、导入 / 导出约束和资源限制的 Wasm。源码语言和构建工具由作者选择，市场自动构建当前使用 Cargo：
 
-当前有两个需要区分的范围：
+| 范围                         | 当前实现                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| 本仓库四个参考插件与自动构建 | 使用 Rust + 官方 Extism PDK，依赖 `Cargo.lock` 和 `build.json`                 |
+| 宿主仓库的开发示例           | 提供 Rust、JavaScript、TypeScript 示例；JS / TS 通过 Extism JS 工具链生成 Wasm |
+| 非 Rust 插件收录             | 先评审并接入固定工具链、依赖锁定和相同的宿主验收流程                           |
 
-| 范围                       | 当前实现                                                                                              |
-| -------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 本市场的四个插件与自动构建 | 全部使用 Rust + 官方 Extism PDK；构建脚本固定调用 Cargo，依赖 `Cargo.lock` 和 `build.json`            |
-| 宿主仓库的开发示例         | 提供 Rust、JavaScript、TypeScript 示例；JS / TS 通过 Extism JS 工具链生成 Wasm                        |
-| 非 Rust 插件在本市场收录   | 尚无对应自动构建入口，需要先评审固定工具链、依赖锁定和验收方案，不能直接加入现有 listing 并假设可构建 |
-
-宿主示例位于[examples/extensions](https://github.com/YanChao001/serial-workbench/tree/develop/examples/extensions)。JS / TS 示例使用的是 Wasm 内的 PDK 环境，不能假定具有浏览器 DOM、Node.js 文件系统或 npm 包的全部运行能力。
+宿主示例位于[examples/extensions](https://github.com/YanChao001/serial-workbench/tree/main/examples/extensions)。JS / TS 业务模块使用 Wasm 内的 PDK 环境，与浏览器 DOM 和 Node.js 环境不同。
 
 ## 插件界面与 HTML
 
@@ -50,13 +48,13 @@ flowchart TD
 | 通用视图   | Wasm 返回视图 JSON                                  | 标准表单、按钮、表格、图表与说明     |
 | 自定义界面 | 上述视图 + 清单引用的单文件 HTML / CSS / JavaScript | 游戏、创作、画布与需要自由排版的应用 |
 
-四款市场插件均采用自包含 HTML / CSS / JavaScript，不增加 React / Vite 构建依赖；其他作者也可用框架生成单文件。界面脚本在浏览器中运行，与没有 DOM 的 Wasm JS / TS 环境分开。
+四款参考插件均采用自包含 HTML / CSS / JavaScript，其他作者也可用框架生成单文件。界面脚本在浏览器中运行，与 Wasm 业务模块分开。
 
-自定义 UI 由包内 `uiDocuments` 交付，视图命令的 `ui.document` 引用文档 ID，源码位于 `plugins/<directory>/ui/<id>.html`。HTML 属于校验和签名快照；开发步骤见 [自定义界面开发](./development.md#自定义界面开发)，协议、额度与桥类型以配套宿主 [扩展指南](https://github.com/YanChao001/serial-workbench/blob/develop/docs/extensions.md#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%95%8C%E9%9D%A2) 和 [SDK](https://github.com/YanChao001/serial-workbench/tree/develop/sdk) 为准。
+自定义 UI 由包内 `uiDocuments` 交付，视图命令的 `ui.document` 引用文档 ID，源码位于 `plugins/<directory>/ui/<id>.html`。HTML 属于校验和签名快照；开发步骤见 [自定义界面开发](./development.md#自定义界面开发)，协议、额度与桥类型以配套宿主 [扩展指南](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%95%8C%E9%9D%A2) 和 [SDK](https://github.com/YanChao001/serial-workbench/tree/main/sdk) 为准。
 
 插件决定正文布局，宿主注入状态、主题、语言、字体、减少动效和可覆写控件样式。“扩展工具”提供独立窗口、重载与会话操作，主窗口导航由宿主承担；独立窗口另有语言与主题入口。
 
-UI 通过无同源权限的 sandbox、CSP 和受控 MessagePort 与宿主隔离，不能直接取得宿主 DOM、原生 IPC、凭据或任意路径。这不提供额外的 OS 资源沙箱；细节见 [安全规范](./security.md#执行隔离与数据能力)。
+UI 通过无同源权限的 sandbox、CSP 和受控 MessagePort 与宿主隔离。消息桥、执行额度及系统权限边界见 [安全规范](./security.md#执行隔离与数据能力)。
 
 ## Wasm、界面与原生服务
 
@@ -67,17 +65,17 @@ UI 通过无同源权限的 sandbox、CSP 和受控 MessagePort 与宿主隔离�
 | 私有 KV 或通用网络效果 | 计算器工作区、贪吃蛇纪录、壁纸图源 API 请求                               | 明确动作、授权及 effect 回执         |
 | 固定桌面服务           | LAN 监听与聊天、短期图片资源、现有图库、公共 HTTPS 外链、插件自身窗口置顶 | 原生服务持有能力，逐次核验身份与授权 |
 
-SDK 只暴露固定的 `lan`、`wallpaper`、`resources`、`links` 与 `window` 服务，逐次核验各自权限；`window` 只控制当前插件的独立原生窗口，完整契约由宿主维护。新增声明不能给旧宿主添加实现。调用入口见 [开发指南](./development.md#固定原生服务)，完整授权与网络边界见 [安全规范](./security.md#原生服务与外部来源)。
+SDK 提供固定的 `lan`、`wallpaper`、`resources`、`links` 与 `window` 服务。调用入口见 [开发指南](./development.md#固定原生服务)，授权与网络边界见 [安全规范](./security.md#原生服务与外部来源)。
 
-LAN 连接与历史由原生服务持有，界面导航或重建只结束自身轮询；文件选择与另存通过系统对话框。壁纸库的图源请求、解析及来源解释留在插件 Wasm，图片资源、图库与背景设置由宿主通用服务管理。用户操作见 [内网通信](../plugins/lan-chat/README.md) 和 [壁纸库](../plugins/wallpaper-browser/README.md)，授权、资源句柄和生命周期边界见 [安全规范](./security.md#原生服务与外部来源)。
+LAN 连接与历史由原生服务持有，界面导航或重建结束自身轮询。壁纸库的图源请求、解析及来源解释留在插件 Wasm，图片资源、图库与背景设置由宿主通用服务管理。用户操作见 [内网通信](../plugins/lan-chat/README.md) 和 [壁纸库](../plugins/wallpaper-browser/README.md)。
 
 ## 运行与数据边界
 
-Wasm 负责请求分派、计算、业务校验和视图状态。宿主在固定的无界面 worker 中执行模块，每轮使用新实例；进程内存与全局变量不能充当长期存储。宿主负责队列、超时、合作取消、worker 回收、输入输出和资源额度，清单声明不能绕过实际运行检查。
+Wasm 负责请求分派、计算、业务校验和视图状态。宿主在无界面 worker 中执行模块，每轮使用新实例；跨调用状态由请求上下文和存储恢复。宿主负责队列、超时、合作取消、worker 回收、输入输出和资源额度。
 
-计算量较大的有界重放可选择宿主支持的执行预算，并声明准确最低宿主版本；预算不增加权限。取值与限额见配套宿主的 [执行与生命周期](https://github.com/YanChao001/serial-workbench/blob/develop/docs/extensions.md#%E6%89%A7%E8%A1%8C%E5%AD%98%E5%82%A8%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)。
+计算量较大的有界重放可选择宿主支持的执行预算，并声明准确最低宿主版本；预算不增加权限。取值与限额见配套宿主的 [执行与生命周期](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E6%89%A7%E8%A1%8C%E5%AD%98%E5%82%A8%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)。
 
-插件通过受控 effect 请求私有存储或声明的网络操作。宿主注入当轮授权和存储快照，核验后执行 effect，再以 `host-result` 和明确回执继续调用插件。插件不能自行伪造宿主授权，也不能因为结果接收失败就假定副作用没有发生。存储写入使用 revision 比较；冲突和已完成但响应省略等结果应保留草稿并说明状态，不自动重放写入。
+插件通过 effect 请求私有存储或声明的网络操作。宿主注入当轮授权和存储快照，核验后执行 effect，再以 `host-result` 回执继续调用插件。存储写入使用 revision 比较；冲突或响应省略时保留草稿，按回执说明状态。有副作用的操作由用户核对后决定是否重试。
 
 | 数据或能力                         | 所有者与边界                                                                        |
 | ---------------------------------- | ----------------------------------------------------------------------------------- |
@@ -93,7 +91,7 @@ Wasm 负责请求分派、计算、业务校验和视图状态。宿主在固定
 | 图库、应用背景与原图               | 复用现有图库和设置；图库从资源压缩导入，原图另存须用户选位置，不向界面返回路径      |
 | 文件产物                           | 插件返回有界内容，由用户选择位置保存；插件不指定任意目标路径                        |
 
-精确权限以各自 `extension.json` 为准，用户用途见插件 README。浏览器服务替身不能代替桌面安装、网络、对话框及多窗口生命周期验收。
+精确权限以各自 `extension.json` 为准，用户用途见插件 README，验证范围见 [测试规范](./testing.md)。
 
 ## 源码职责
 
@@ -111,14 +109,12 @@ Wasm 负责请求分派、计算、业务校验和视图状态。宿主在固定
 | [.github/actions/plugin-check/action.yml](../.github/actions/plugin-check/action.yml)        | 使用市场工具链遍历收录项执行原生单测与 Clippy           |
 | [.github/workflows/publish.yml](../.github/workflows/publish.yml)                            | 分开构建与生产签名发布任务                              |
 
-宿主运行时、视图校验、效果执行与渲染的源码入口由 [宿主扩展指南](https://github.com/YanChao001/serial-workbench/blob/develop/docs/extensions.md) 维护。长期取舍见 [ADR 0013](https://github.com/YanChao001/serial-workbench/blob/develop/docs/adr/0013-extension-desktop-services.md)；发布使用的文档、SDK 与工具须对应 [固定宿主提交](./publishing.md#固定配套宿主)。
+宿主运行时、视图校验、效果执行与渲染的源码入口由 [宿主扩展指南](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md) 维护。长期取舍见 [ADR 0013](https://github.com/YanChao001/serial-workbench/blob/main/docs/adr/0013-extension-desktop-services.md)；发布使用的文档、SDK 与工具须对应 [固定宿主提交](./publishing.md#固定配套宿主)。
 
 ## 兼容与演进
 
-当前处于开发阶段，协议可以做明确的破坏性修改，不承诺历史版本兼容，也不维护历史宿主矩阵。包格式、API、视图、市场目录和用户注册表是不同边界；一个清单版本改对了，不代表其他层自动兼容。协议升级需先完成选定当前宿主或固定待发布提交的校验，再更新市场源码、测试、产物和签名目录；未知或未来存档继续保留原件并拒写，不引入未经实现的迁移。
+开发阶段按选定宿主提交验证，协议可做明确的破坏性修改。包格式、API、视图、市场目录和用户注册表分别检查兼容性。协议升级先完成配套宿主实现，再更新市场源码、测试、产物和签名目录；版本与跨仓库顺序见 [固定配套宿主](./publishing.md#固定配套宿主)。
 
-当前插件与宿主版本及跨仓库发布顺序统一见 [固定配套宿主](./publishing.md#固定配套宿主)。
+支持未来条目隔离的宿主在完整验签后可显示不兼容条目的只读预览或摘要，下载与安装仍要求兼容。适用条件由 [宿主市场契约](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E5%AE%98%E6%96%B9%E6%8F%92%E4%BB%B6%E5%B8%82%E5%9C%BA) 维护，客户端症状见 [排障手册](./troubleshooting.md#某条目仅显示需要新宿主)。
 
-支持未来条目隔离的宿主可在完整验签后显示不兼容条目的只读预览或摘要，仍拒绝下载与安装；签名、元数据、重复身份和防回退检查保持严格。适用版本及完整条件由 [宿主市场契约](https://github.com/YanChao001/serial-workbench/blob/develop/docs/extensions.md#%E5%AE%98%E6%96%B9%E6%8F%92%E4%BB%B6%E5%B8%82%E5%9C%BA) 维护，客户端症状见 [排障手册](./troubleshooting.md#某条目仅显示需要新宿主)。
-
-宿主拒绝不兼容、未来版本或损坏数据时保留原件；不通过删除用户目录“修复”。旧开发态存档仅按宿主明确支持的归档重建流程处理。市场回退内容也应使用更高目录修订号重新发布，不能重用旧修订号或把旧 Release 标为 latest 来绕过客户端的防回退检查。
+宿主拒绝不兼容、未来版本或损坏数据时保留原件；旧开发态存档使用宿主明确支持的归档重建流程。市场内容回退使用更高目录修订重新发布，操作见 [下架、回退与公钥轮换](./publishing.md#下架回退与公钥轮换)。

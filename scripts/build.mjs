@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import {
   mkdir,
   mkdtemp,
@@ -31,6 +32,16 @@ import {
 } from "./files.mjs";
 
 const root = resolve(import.meta.dirname, "..");
+export const projectLicenseFiles = ["LICENSE", "NOTICE"];
+export function licensedUiDocument(html, repositoryRoot = root) {
+  const notices = projectLicenseFiles
+    .map(
+      (path) => `${path}\n${readFileSync(join(repositoryRoot, path), "utf8")}`,
+    )
+    .join("\n\n");
+  const footer = `\n<!-- Serial Workbench project licenses\n${notices}\n-->\n`;
+  return html.endsWith(footer) ? html : `${html}${footer}`;
+}
 export const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 export function packagePlugin(manifest, wasm, uiDocuments = {}) {
   validateManifest(manifest);
@@ -49,6 +60,13 @@ export function packagePlugin(manifest, wasm, uiDocuments = {}) {
     )
   )
     throw new Error("Invalid UI documents");
+  // Verification repacks existing bytes; only a complete footer is idempotent.
+  uiDocuments = Object.fromEntries(
+    Object.entries(uiDocuments).map(([id, html]) => [
+      id,
+      licensedUiDocument(html),
+    ]),
+  );
   const documents = Object.entries(uiDocuments)
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([id, html]) => ({
@@ -132,6 +150,14 @@ export async function build({ revision, runBuild = true }) {
       if (error.code !== "ENOENT") throw error;
     }
     staging = await mkdtemp(join(artifacts, `.market-${revision}-`));
+    for (const path of projectLicenseFiles) {
+      await ensureDirectory(dirname(join(staging, path)));
+      await writeFile(
+        join(staging, path),
+        await readBounded(join(root, path), 64 * 1024),
+        { flag: "wx" },
+      );
+    }
     const entries = [],
       ids = new Set();
     for (const listing of listings.plugins) {

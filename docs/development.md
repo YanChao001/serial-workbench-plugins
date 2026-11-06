@@ -1,18 +1,16 @@
 # 插件开发指南
 
-本指南面向向市场提交插件的作者。市场仓库负责插件源码、收录清单和构建；宿主负责权限、视图协议、Wasm 运行与安装。先了解 [架构与边界](./architecture.md)，再按本页准备环境。验证要求见 [测试规范](./testing.md)，上架与签名见 [发布指南](./publishing.md)。
+本页说明环境准备、工具使用与插件迭代。运行分工见 [架构说明](./architecture.md)，验证要求见 [测试规范](./testing.md)，上架与签名见 [发布指南](./publishing.md)。
 
 ## 首次编写插件
 
-先按 [独立作者入口](./plugin-authoring.md) 取得配套宿主的公开契约、SDK 与 `extension-tool`，完成最小文本插件的编译、真实 Wasm 校验和本地打包。工具的取得边界由该页维护。
-
-最短路径是确定配套宿主提交并准备工具 → 完成最小示例 → 按业务选择文本、通用视图或自定义 HTML → 编写手写 fixture 并验收真实宿主交互 → 按本页新增插件和贡献流程提交。先验证单个插件，再运行完整市场检查；教学示例不加入发布收录清单。
+先按 [独立作者入口](./plugin-authoring.md) 取得配套宿主的契约、SDK 与 `extension-tool`，完成最小文本插件。再按业务选择文本、通用视图或自定义 HTML，完成单插件 fixture 与宿主交互验收，按本页新增插件并提交收录。
 
 ## 环境与目录
 
-市场脚本只使用 Node 内置模块，无需安装 npm 依赖。Node 以 [`package.json`](../package.json) 为准；编译宿主工具时，还须满足宿主 `engines` 并使用其指定 pnpm。两个仓库的 Node 支持范围不同，不直接照搬宿主 `.nvmrc`。
+市场脚本只使用 Node 内置模块，无需安装 npm 依赖。Node 要求见 [`package.json`](../package.json)；编译宿主工具时，使用宿主要求的 Node 和 pnpm。
 
-Rust 使用本仓库 [`rust-toolchain.toml`](../rust-toolchain.toml) 钉住的工具链，插件依赖以各自 `Cargo.lock` 为准。宿主工具使用宿主自己的 `rust-toolchain.toml`；不要将宿主的 `RUSTUP_TOOLCHAIN` 导出到市场构建步骤，否则会覆盖市场工具链选择。宿主工具构建还需要对应平台的 Tauri 编译依赖；按 [宿主环境说明](https://github.com/YanChao001/serial-workbench/blob/develop/docs/development.md#%E7%8E%AF%E5%A2%83%E8%A6%81%E6%B1%82) 安装。即使工具本身不启动窗口，其所属 Rust crate 仍依赖这些库。
+插件使用市场 [`rust-toolchain.toml`](../rust-toolchain.toml) 和各自 `Cargo.lock`；宿主工具使用宿主的工具链。`RUSTUP_TOOLCHAIN` 会覆盖目录选择，跨仓库构建前检查该变量。宿主工具所属 crate 依赖 Tauri 平台库，按 [宿主环境说明](https://github.com/YanChao001/serial-workbench/blob/main/docs/development.md#%E7%8E%AF%E5%A2%83%E8%A6%81%E6%B1%82) 准备。
 
 从市场仓库根目录准备插件工具链：
 
@@ -36,7 +34,7 @@ rustup target add wasm32-unknown-unknown
 | `target/`                                      | Cargo 编译缓存与 Wasm 模块，不手工修改或提交      |
 | `artifacts/market-<revision>/`                 | 本次修订的完整插件包与目录，不手工修改或提交      |
 
-构建、离线检查和生产发布共用市场仓库内的 `artifacts/market-<revision>/`，不再写入 `dist/`，也不向宿主的 `artifacts/` 复制发布包。独立检出与作为子模块检出保持同一布局；宿主运行测试时创建的临时 fixture、报告和截图由宿主测试流程管理。编译缓存保留在 `target/`，清理打包结果无需删除它。最小作者示例的本地包使用 `artifacts/author-text/`，见[独立作者入口](./plugin-authoring.md)。
+独立检出与子模块使用相同产物布局。`artifacts/market-<revision>/` 同时包含项目的 `LICENSE` 与 `NOTICE`；清理打包结果时保留 `target/` 编译缓存。最小作者示例使用 `artifacts/author-text/`，宿主测试的临时 fixture、报告和截图由其测试流程管理。
 
 ## 仓库来源与平台入口
 
@@ -61,17 +59,17 @@ node scripts/repository-config.mjs check
 node --test scripts/*.test.mjs plugins/*/ui/*.test.mjs
 ```
 
-`package.json` 提供同义的 `repository:sync` 与 `repository:check`。`sync` 使用已提交的 [`repository.generated.json`](../repository.generated.json) 中上次同步的配置及目录身份作为旧值来源，有界更新根目录 Markdown、`docs/` Markdown、插件 README 中本项目的 URL / 仓库身份，以及宿主 checkout、PR CI 默认 ref 和壁纸 fixture 的 User-Agent。默认文档分支随 `host.docsRef` 更新，已固定的标签或 SHA 保留；第三方来源、上游 Actions 与相似前缀仓库不会被替换。同步后审阅差异并一起提交配置、同步记录和派生文件；保留旧同步记录直到命令完成，不手工把它预先改成新值。`check` 只检查漂移，不写文件，脚本回归和 CI 会执行同样检查。需要检查另一个独立检出时，两条命令均可追加 `--root <checkout>`。
+`package.json` 提供同义的 `repository:sync` 与 `repository:check`。`sync` 使用已提交的 [`repository.generated.json`](../repository.generated.json) 中上次同步的配置及目录身份作为旧值，更新项目 Markdown 链接、宿主 checkout、PR CI 默认 ref 和壁纸 User-Agent。默认文档分支随 `host.docsRef` 更新，固定标签或 SHA 及第三方链接保留。命令完成后审阅差异，一起提交配置、同步记录和派生文件；旧同步记录保留至命令完成。`check` 只检查漂移。两条命令均可追加 `--root <checkout>` 指定其他检出。
 
 同步先在相同目录暂存完整新字节，提交每个文件前比较读取时的原始字节，并拒绝覆盖随后编辑或新建的文件。安装失败时逆序恢复已替换且未被再次修改的文件；若并发编辑导致无法安全恢复，会保留当前文件和 `.repository-sync-*.bak` 原件备份，并在错误中报告恢复位置。此时先核对并保留双方内容，解决冲突后再运行同步，不直接删除报告的备份。
 
-发布脚本通过 [`scripts/hosting.mjs`](../scripts/hosting.mjs) 选择显式适配器。GitHub API、`gh` 参数、CI 源码 SHA 来源和标签复核集中在 [`scripts/hosting/github.mjs`](../scripts/hosting/github.mjs)；Release 说明使用配置中的链接模板。配置其他 HTTPS 链接不会自动切换发布 API。未来迁移平台时，维护者统一修改配置，添加经审核的适配器，并检查 [`.github/`](../.github/) 中的平台工作流；不按域名自动猜测平台，不预建其他服务实现。宿主 checkout 和默认 ref 由同步命令更新，其他 GitHub Actions 语法与上游 action 地址留在这些明确的平台适配文件中。
+发布脚本通过 [`scripts/hosting.mjs`](../scripts/hosting.mjs) 选择适配器。GitHub API、`gh` 参数、源码 SHA 来源和标签复核集中在 [`scripts/hosting/github.mjs`](../scripts/hosting/github.mjs)，Release 说明使用配置中的链接模板。迁移平台时修改配置、实现适配器，并更新 [`.github/`](../.github/) 中的平台工作流；链接配置与发布 API 分别维护。
 
-壁纸 Rust 插件通过 `include_str!` 嵌入同步生成的 [`user-agent.generated.txt`](../plugins/wallpaper-browser/user-agent.generated.txt)，该文件只包含从市场配置与 `listings.repository` 派生的固定请求 User-Agent；它不嵌入整个收录清单，增删其他插件不会因此改变壁纸 Wasm 字节。手写 smoke fixture 由同步命令更新同一字段，其余网络来源、权限与业务断言仍由插件维护。宿主测试可通过 `scripts/repository-config.mjs` 的只读 `wallpaperUserAgent(config, repository)` 取得相同联系方式。联系方式迁移会改变编译后的插件字节，应按正常插件版本与发布流程验收。
+壁纸 Rust 插件通过 `include_str!` 嵌入 [`user-agent.generated.txt`](../plugins/wallpaper-browser/user-agent.generated.txt)，内容由市场配置与 `listings.repository` 派生。同步命令也更新 smoke fixture 的同一字段。宿主测试可调用只读 `wallpaperUserAgent(config, repository)` 取得相同值。修改联系方式会改变 Wasm 字节，按插件版本与发布流程验收。
 
 ## 准备宿主校验工具
 
-市场构建需要与当前协议一致的 `extension-tool`。它是宿主提供的专用无界面二进制，支持 `validate` 和 `test`，不初始化桌面应用。不要使用主应用可执行文件代替它，也不要为绕过失败而跳过权威校验。
+市场构建使用配套宿主的专用无界面二进制 `extension-tool`，支持 `validate` 和 `test`。
 
 ### 作为宿主子模块开发
 
@@ -99,22 +97,22 @@ rustup toolchain install
 rustup target add wasm32-unknown-unknown
 ```
 
-标准子模块布局会自动探测 `../src-tauri/target/debug/extension-tool(.exe)`；显式设置变量便于确认正在使用哪个宿主。如果设置过 `CARGO_TARGET_DIR`，请改用实际输出位置。宿主协议代码变化后重新构建工具，变量指向旧二进制不会自动更新其行为。
+标准子模块布局会自动探测 `../src-tauri/target/debug/extension-tool(.exe)`。若设置过 `CARGO_TARGET_DIR`，变量应指向实际输出位置。宿主协议代码变化后重新构建工具。
 
 ### 独立检出市场仓库
 
-独立 clone 不包含宿主源码或预编译工具。另行检出配套宿主，在其根目录执行上一节的 `pnpm install`、`pnpm build` 与 `cargo build`，再回到市场目录准备本仓库 Rust 工具链和 Wasm 目标。两个检出目录不要求存在父子关系。
+另行检出配套宿主，在其根目录执行上一节的 `pnpm install`、`pnpm build` 与 `cargo build`，再回到市场目录准备本仓库 Rust 工具链和 Wasm 目标。两个检出目录可独立放置。
 
 通过 `STARTER_EXTENSION_TOOL` 指定工具的**绝对路径**，例如 PowerShell：
 
 ```powershell
-$env:STARTER_EXTENSION_TOOL = "E:\tools\tauri-desktop-starter\src-tauri\target\debug\extension-tool.exe"
+$env:STARTER_EXTENSION_TOOL = "E:\tools\serial-workbench\src-tauri\target\debug\extension-tool.exe"
 ```
 
 macOS / Linux：
 
 ```sh
-export STARTER_EXTENSION_TOOL="/absolute/path/to/tauri-desktop-starter/src-tauri/target/debug/extension-tool"
+export STARTER_EXTENSION_TOOL="/absolute/path/to/serial-workbench/src-tauri/target/debug/extension-tool"
 ```
 
 替换为实际位置，另开终端后重新设置。工具选择规则见 [`scripts/host-tool.mjs`](../scripts/host-tool.mjs)。
@@ -135,15 +133,15 @@ export MARKET_REVISION="$(date -u +%s)"
 node scripts/check.mjs
 ```
 
-`MARKET_REVISION` 必须为正 u32。Unix 秒适合日常生成不重复的本地目录；同一秒重复执行仍会冲突，请生成一个未使用的值。工具不覆盖已有 `artifacts/market-<revision>`，本地修订号不会自动登记为线上最新版本。生产修订递增要求见 [发布指南](./publishing.md#有效期与续签)。
+`MARKET_REVISION` 必须为正 u32，并对应未使用的产物目录；同一秒重跑时换一个值。生产修订递增要求见 [发布指南](./publishing.md#有效期与续签)。
 
-`check` 检查 Rust 格式、按锁文件编译全部 Wasm，通过宿主 `test` 后打包并用一次性内存密钥离线验签。输出为 `catalog-unsigned.json` 和可本地导入的 `.starter-extension.json`，不生成生产 `catalog.json` 或使用生产私钥。具体检查与未覆盖范围见 [测试规范](./testing.md#真实-wasm-与手写-fixture)。
+`check` 构建并验收 `listings.json` 的全部收录项，再用一次性密钥离线验签，输出 `catalog-unsigned.json`、插件包和许可文件。当前清单为空，因此完整市场检查不会编译四个参考插件；迭代参考插件时按 [单插件检查](./testing.md#聚焦单个插件) 运行。检查范围见 [测试规范](./testing.md#真实-wasm-与手写-fixture)。
 
 仅需构建和真实 Wasm 校验时也可在设置新修订号后，从**市场仓库根目录**运行 `node scripts/build.mjs`。`check` 已包含该步骤，不要先用相同修订号运行 `build` 再运行 `check`。
 
 ## 新增一个插件
 
-当前四个市场插件都使用官方 Extism Rust PDK，分别独立维护 Cargo 清单和锁文件。按业务参考 [计算器](../plugins/scientific-calculator/) 的计算与工作区、[贪吃蛇](../plugins/snake/) 的本地高频循环和日志校验，或 [内网通信](../plugins/lan-chat/) / [壁纸库](../plugins/wallpaper-browser/) 的固定服务调用。复制后先修改身份和说明，不要为不相关的功能顺带复制存储、监听或下载能力。
+四个参考插件都使用官方 Extism Rust PDK，独立维护 Cargo 清单和锁文件。按业务参考 [计算器](../plugins/scientific-calculator/)、[贪吃蛇](../plugins/snake/)、[内网通信](../plugins/lan-chat/) 或 [壁纸库](../plugins/wallpaper-browser/)，复用需要的逻辑并修改身份与说明。
 
 1. 建立 `plugins/<directory>/`。目录名使用小写字母开头的小写字母、数字和连字符，最长 64 字符；不要复制 `target/` 或 `artifacts/`。
 2. 修改 `Cargo.toml` 的包名、版本与许可。保留 `cdylib` 产物类型，新增依赖时审阅 Wasm 支持、许可、体积和维护情况。只为新插件生成或更新自身的 `Cargo.lock`，不要顺带升级其他插件。
@@ -161,11 +159,11 @@ cargo fmt --manifest-path plugins/my-plugin/Cargo.toml
 cargo test --locked --manifest-path plugins/my-plugin/Cargo.toml --target-dir target/my-plugin-native
 ```
 
-`my-plugin` 是需要替换的示例名，不是仓库已有插件。依赖未变化的已有插件不要重复生成锁文件。随后按上一节生成新的 `MARKET_REVISION`，执行完整离线检查；检查通过后，在宿主中手动导入生成的包，验收授权、安装与真实交互。自动检查通过的范围见 [测试规范](./testing.md)。
+将 `my-plugin` 替换为实际目录名；已有插件仅在依赖变化时更新锁文件。随后生成新的 `MARKET_REVISION` 并执行完整离线检查，在宿主中导入生成包，验收授权、安装与真实交互。
 
 ## Rust、JavaScript、TypeScript 与界面
 
-宿主提供 [JS / TS 编译为 Wasm 的示例](https://github.com/YanChao001/serial-workbench/blob/develop/docs/extensions.md#%E6%9E%84%E5%BB%BA-javascript-%E5%92%8C-typescript-%E7%A4%BA%E4%BE%8B)，其执行环境没有 Node 内置模块或浏览器 DOM。市场 `build.mjs` 当前固定调用 Cargo；收录其他语言须先实现受审核的构建流程，并保留相同的宿主验证、fixture、打包与签名步骤。语言与界面的区别见 [架构说明](./architecture.md#语言与-wasm)。
+语言与执行环境见 [架构说明](./architecture.md#语言与-wasm)。收录 JS / TS 或其他语言前，先接入构建流程，保留相同的宿主验证、fixture、打包与签名步骤。
 
 ## 自定义界面开发
 
@@ -173,13 +171,11 @@ cargo test --locked --manifest-path plugins/my-plugin/Cargo.toml --target-dir ta
 
 宿主在作者代码之前注入 SDK，HTML 不需要导入脚本。SDK 提供与宿主一致的主题 token、字体、语言、减少动效和基础控件样式；默认样式可以被作者 CSS 覆写，不必复制宿主组件或引入框架。独立窗口可选择主题和语言，包括跟随宿主语言；消费 snapshot 更新，避免只在初次加载时固定文案或画布颜色。
 
-说明密度、Tooltip / placeholder、操作反馈和动态长文布局遵循 [宿主说明与布局规范](https://github.com/YanChao001/serial-workbench/blob/develop/docs/conventions/ui-guidelines.md#%E8%AF%B4%E6%98%8E%E4%B8%8E%E5%B8%83%E5%B1%80%E7%A8%B3%E5%AE%9A)；操作提示使用 SDK `notify`，其参数和限制见 [SDK](https://github.com/YanChao001/serial-workbench/blob/develop/sdk/README.md)。
-
-控件增强、原生 select 例外与样式覆写统一见 [SDK 默认外观](https://github.com/YanChao001/serial-workbench/blob/develop/sdk/README.md#%E9%BB%98%E8%AE%A4%E5%A4%96%E8%A7%82%E4%B8%8E%E5%8A%A8%E6%95%88)。
+说明密度、提示与长文布局遵循 [宿主界面规范](https://github.com/YanChao001/serial-workbench/blob/main/docs/conventions/ui-guidelines.md#%E8%AF%B4%E6%98%8E%E4%B8%8E%E5%B8%83%E5%B1%80%E7%A8%B3%E5%AE%9A)。操作反馈使用 SDK `notify`；控件增强、原生 select 例外和样式覆写见 [SDK 默认外观](https://github.com/YanChao001/serial-workbench/blob/main/sdk/README.md#%E9%BB%98%E8%AE%A4%E5%A4%96%E8%A7%82%E4%B8%8E%E5%8A%A8%E6%95%88)。
 
 首屏骨架由宿主真实加载状态控制，SDK 在首个视图、主题与 DOM 呈现就绪后通知展示；作者不手工发送内部握手或人为添加启动延迟。自己的异步业务仍需真实加载 / 失败状态，后续忙碌保持正文可见。宿主工具入口位于左侧当前扩展导航项或独立窗口标题栏，正文只组织业务内容。
 
-通过 SDK 消费状态更新、执行业务动作、提交字段与草稿检查点，并保存产物；失败保留输入，按回执区分完成与取消。方法、类型和示例由 [宿主界面 SDK](https://github.com/YanChao001/serial-workbench/blob/develop/sdk/README.md) 维护，不另写 DTO。
+通过 SDK 消费状态更新、执行业务动作、提交字段与草稿检查点，并保存产物；失败保留输入，按回执区分完成与取消。方法、类型和示例由 [宿主界面 SDK](https://github.com/YanChao001/serial-workbench/blob/main/sdk/README.md) 维护，不另写 DTO。
 
 隔离界面的 sandbox 不含 `allow-forms`；浏览器可能在触发 `onsubmit` 前就阻止表单提交。操作按钮显式使用 `type="button"`，通过点击处理调用业务函数，不依赖 `onsubmit`、`requestSubmit()` 或按钮默认的 submit 行为。需要回车操作时，在对应输入框中按产品语义处理键盘事件、阻止默认提交，再调用同一业务函数；多行输入保留换行或使用明确的组合键。不要为修复按钮无响应而放宽宿主 sandbox。
 
@@ -187,7 +183,7 @@ cargo test --locked --manifest-path plugins/my-plugin/Cargo.toml --target-dir ta
 
 画布拖动和缩放在本地动画帧中绘制，串行合并最新 fields / checkpoint，业务动作前先提交末次草稿。忙碌时根据新状态协调草稿，不循环重放业务动作；实现可参考 [计算器](../plugins/scientific-calculator/README.md#绘图与科学表达式) 及其界面回归。
 
-本仓库 build 自动读取被引用的 `ui/<id>.html`，检查目录与文件不是链接、UTF-8 和额度，固定同一快照传给原生工具并打包。只修改 HTML 也必须提高插件版本；完整 JSON 包和 UI 文档摘要都会改变。界面重载恢复本窗口字段与检查点，不重新初始化 Wasm；未上报的局部状态无法保留。不同示例见各插件的 `ui/main.html`。
+构建读取被引用的 `ui/<id>.html`，检查路径、UTF-8 和额度，将源码快照交给原生工具；打包时追加项目许可全文，再计算 UI 和包摘要。仅修改 HTML 也应提高已分发插件的版本。界面重载恢复本窗口已上报的字段与检查点，不重新初始化 Wasm。示例见各插件的 `ui/main.html`。
 
 通用 HTTP 和私有 KV 由 Wasm 返回受控 effects，长连接等使用下面的固定服务；供应商 URL、网页解析与来源解释留在插件 Wasm。UI 不使用原生 IPC、Node API 或另建浏览器存储，隔离边界见 [安全规范](./security.md#执行隔离与数据能力)。
 
@@ -203,14 +199,12 @@ cargo test --locked --manifest-path plugins/my-plugin/Cargo.toml --target-dir ta
 | `links`     | `links:open`        | 用户请求打开公共 HTTPS 来源页                                                                |
 | `window`    | `window:control`    | 读取、切换本插件独立原生窗口的置顶状态，嵌入主界面与浏览器不支持                             |
 
-网络请求按配套宿主的 [来源与授权](https://github.com/YanChao001/serial-workbench/blob/develop/docs/extensions.md#%E6%9D%A5%E6%BA%90%E4%B8%8E%E6%8E%88%E6%9D%83) 继承连接设置，代理授权独立于基础网络授权。壁纸库不在局部界面或检查点维护连接偏好；具体操作见 [网络连接](../plugins/wallpaper-browser/README.md#网络连接)，安全审核见 [安全规范](./security.md#原生服务与外部来源)。
+网络请求按配套宿主的 [来源与授权](https://github.com/YanChao001/serial-workbench/blob/main/docs/extensions.md#%E6%9D%A5%E6%BA%90%E4%B8%8E%E6%8E%88%E6%9D%83) 继承连接设置，代理授权独立于基础网络授权。壁纸库不在局部界面或检查点维护连接偏好；具体操作见 [网络连接](../plugins/wallpaper-browser/README.md#网络连接)，安全审核见 [安全规范](./security.md#原生服务与外部来源)。
 
-服务是受控宿主能力，不是可插拔通用 IPC。新增方法或权限先完成宿主实现及边界测试，再更新插件；独立 CI 必须能获取对应宿主提交。具体用户操作见 [内网通信说明](../plugins/lan-chat/README.md) 和 [壁纸说明](../plugins/wallpaper-browser/README.md)，信任与许可见 [安全规范](./security.md#原生服务与外部来源)。
+新增方法或权限先完成宿主实现及边界测试，再更新插件并固定可获取的宿主提交。用户操作见 [内网通信说明](../plugins/lan-chat/README.md) 和 [壁纸说明](../plugins/wallpaper-browser/README.md)。
 
 状态轮询与标记已读应使用独立在途状态，不把每轮查询当作手动业务忙碌；等待期间昵称、草稿和连接操作保持可用。手动动作后丢弃早先发出的旧查询回执，更新服务状态时保留用户新输入、焦点与选区。实现不应通过整页重建或周期禁用控件来保证互斥。
 
 ## 提交前
 
-按 [测试规范](./testing.md) 选择与改动相称的检查，在 PR 中说明实际执行的平台、命令、结果、权限与数据影响。不要把本地离线验签写成线上发布，也不要提交生成包、编译目录、密钥或用户安装数据。
-
-市场是独立仓库：先在市场分支提交、评审和推送，再由宿主更新子模块引用。发布范围内的改动经 PR 合入 `main` 后自动执行生产发布；功能分支和纯文档不触发，手动发布与续签见 [发布指南](./publishing.md)。
+按 [测试规范](./testing.md) 选择检查，在 PR 中说明实际平台、命令、结果、权限与数据影响。提交要求和宿主子模块更新顺序见 [贡献流程](../CONTRIBUTING.md)。当前 Actions 停用，发布启用条件、触发范围和续签见 [发布指南](./publishing.md)。

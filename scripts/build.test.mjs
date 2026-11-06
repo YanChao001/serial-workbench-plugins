@@ -33,6 +33,12 @@ test("an independent checkout keeps packages in artifacts and preserves caches o
     // An empty reviewed listing exercises packaging without a compiler or host process.
     const listings = { repository: "owner/repo", plugins: [] };
     await writeFile(join(root, "listings.json"), JSON.stringify(listings));
+    for (const path of ["LICENSE", "NOTICE"]) {
+      await writeFile(
+        join(root, path),
+        await readFile(new URL(`../${path}`, import.meta.url)),
+      );
+    }
     const tool = join(root, "extension-tool.exe");
     await writeFile(tool, "test-only placeholder; never executed");
     process.env.STARTER_EXTENSION_TOOL = tool;
@@ -48,6 +54,12 @@ test("an independent checkout keeps packages in artifacts and preserves caches o
     const catalogPath = join(output, "catalog-unsigned.json");
     const catalogBytes = await readFile(catalogPath);
     assert.equal(JSON.parse(catalogBytes).revision, 7);
+    for (const path of ["LICENSE", "NOTICE"]) {
+      assert.deepEqual(
+        await readFile(join(output, path)),
+        await readFile(join(root, path)),
+      );
+    }
     await assert.rejects(readdir(join(root, "dist")), { code: "ENOENT" });
 
     await assert.rejects(

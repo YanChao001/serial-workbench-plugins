@@ -5,7 +5,7 @@ import { validateManifest } from "./protocol.mjs";
 const manifest = () => ({
   formatVersion: 3,
   apiVersion: 2,
-  minHostVersion: "0.1.6",
+  minHostVersion: "0.1.0",
   id: "example.capabilities",
   version: "1.0.0",
   name: "Capability fixture",
@@ -37,13 +37,13 @@ test("media and external-link capabilities require the host version that impleme
       extension[scope].push(permission);
       if (permission === "network:system-proxy")
         extension.optionalPermissions.push("network:images");
-      for (const minHostVersion of ["0.0.65535", "0.1.4", "0.1.5"])
+      for (const minHostVersion of ["0.1.0", "0.1.10", "0.2.0", "1.0.0"])
+        validateManifest({ ...extension, minHostVersion });
+      for (const minHostVersion of ["0.0.9", "0.0.65535"])
         assert.throws(
           () => validateManifest({ ...extension, minHostVersion }),
-          /minHostVersion 0.1.6/,
+          /minHostVersion 0\.1\.0/,
         );
-      for (const minHostVersion of ["0.1.6", "0.1.10", "0.2.0", "1.0.0"])
-        validateManifest({ ...extension, minHostVersion });
     }
   }
   assert.throws(
@@ -103,18 +103,18 @@ test("window control declarations require the host version that implements them"
   for (const scope of ["permissions", "optionalPermissions"]) {
     const extension = manifest();
     extension[scope].push("window:control");
-    for (const minHostVersion of ["0.0.65535", "0.1.4", "0.1.5", "0.1.6"])
+    for (const minHostVersion of ["0.1.0", "0.1.10", "0.2.0", "1.0.0"])
+      validateManifest({ ...extension, minHostVersion });
+    for (const minHostVersion of ["0.0.9", "0.0.65535"])
       assert.throws(
         () => validateManifest({ ...extension, minHostVersion }),
-        /Window control requires minHostVersion 0\.1\.7/,
+        /Window control requires minHostVersion 0\.1\.0/,
       );
-    for (const minHostVersion of ["0.1.7", "0.1.10", "0.2.0", "1.0.0"])
-      validateManifest({ ...extension, minHostVersion });
     assert.throws(
       () =>
         validateManifest({
           ...extension,
-          minHostVersion: "0.1.7",
+          minHostVersion: "0.1.0",
           [scope === "permissions" ? "optionalPermissions" : "permissions"]: [
             "window:control",
           ],
@@ -159,7 +159,7 @@ test("text commands reject image and proxy network gates while optional declarat
 
 test("custom window sizes require bounded integer dimensions and the implementing host", () => {
   const extension = manifest();
-  extension.minHostVersion = "0.1.7";
+  extension.minHostVersion = "0.1.0";
   const command = extension.commands[0];
   command.inputFormat = "json";
   command.resultFormat = "view";
@@ -193,12 +193,12 @@ test("custom window sizes require bounded integer dimensions and the implementin
   command.ui.window = false;
   assert.throws(() => validateManifest(extension), /window size/);
   command.ui.window = true;
-  for (const minHostVersion of ["0.0.65535", "0.1.6"])
+  for (const minHostVersion of ["0.0.9", "0.0.65535"])
     assert.throws(
       () => validateManifest({ ...extension, minHostVersion }),
       /minimum host/,
     );
-  for (const minHostVersion of ["0.1.7", "0.1.10", "0.2.0", "1.0.0"])
+  for (const minHostVersion of ["0.1.0", "0.1.10", "0.2.0", "1.0.0"])
     validateManifest({ ...extension, minHostVersion });
 });
 
@@ -206,30 +206,29 @@ test("compute execution budgets require the implementing host without adding per
   const extension = manifest();
   const command = extension.commands[0];
   command.executionBudget = "compute";
-  for (const minHostVersion of ["0.0.65535", "0.1.4", "0.1.5", "0.1.6"])
+  for (const minHostVersion of ["0.1.0", "0.1.10", "0.2.0", "1.0.0"])
+    validateManifest({ ...extension, minHostVersion });
+  for (const minHostVersion of ["0.0.9", "0.0.65535"])
     assert.throws(
       () => validateManifest({ ...extension, minHostVersion }),
-      /Compute execution budget requires minHostVersion 0\.1\.7/,
+      /Compute execution budget requires minHostVersion 0\.1\.0/,
     );
-  for (const minHostVersion of ["0.1.7", "0.1.10", "0.2.0", "1.0.0"])
-    validateManifest({ ...extension, minHostVersion });
 
   for (const budget of [undefined, "standard"]) {
     if (budget === undefined) delete command.executionBudget;
     else command.executionBudget = budget;
-    for (const minHostVersion of ["0.0.1", "0.1.4", "0.1.7"])
+    for (const minHostVersion of ["0.0.1", "0.1.0", "0.1.10"])
       validateManifest({ ...extension, minHostVersion });
   }
   assert.throws(
-    () =>
-      validateManifest({ ...extension, optionalPermissions: ["compute"] }),
+    () => validateManifest({ ...extension, optionalPermissions: ["compute"] }),
     /Invalid required or optional permissions/,
   );
 });
 
 test("execution budget declarations reject null, unknown values and misplaced fields", () => {
   const extension = manifest();
-  extension.minHostVersion = "0.1.7";
+  extension.minHostVersion = "0.1.0";
   const command = extension.commands[0];
   for (const executionBudget of [
     null,

@@ -1,6 +1,6 @@
 # 第三方归属与许可
 
-本文件记录计算器插件实际复用的第三方内容及其许可。插件自身采用仓库 [MIT 许可证](../../LICENSE)；第三方内容仍遵循各自的许可或服务条款。
+本文件记录计算器插件实际复用的第三方内容及其许可。插件自有代码采用仓库 [Apache-2.0 许可证](../../LICENSE)；第三方内容遵循各自的许可或服务条款。
 
 ## Microsoft Calculator 单位目录与本地化资源
 
@@ -82,4 +82,4 @@ DEALINGS IN THE SOFTWARE.
 
 货币数据来源于 AYR Tech (Pty) Ltd 运营的 [ExchangeRate-API](https://www.exchangerate-api.com)，使用其 [Open Access 端点](https://www.exchangerate-api.com/docs/free)。插件固定请求 `https://open.er-api.com/v6/latest/USD`，取得的数据用于终端用户的本地货币换算，并在货币界面保留“[Rates By Exchange Rate API](https://www.exchangerate-api.com)”署名链接。
 
-汇率数据受提供商 [服务条款与隐私政策](https://www.exchangerate-api.com/terms) 约束，不属于本插件 MIT 许可证覆盖的内容。该开放端点要求署名，允许个人、商业换算与终端用户缓存，不允许将所取得的数据再分发为原始汇率服务。插件不预置提供商的汇率快照，不提供面向第三方的原始汇率分发接口。该服务每日更新并有请求限制，其汇率只用于信息与示例用途。
+汇率数据受提供商 [服务条款与隐私政策](https://www.exchangerate-api.com/terms) 约束，不属于本插件 Apache-2.0 许可证覆盖的内容。该开放端点要求署名，允许个人、商业换算与终端用户缓存，不允许将所取得的数据再分发为原始汇率服务。插件不预置提供商的汇率快照，不提供面向第三方的原始汇率分发接口。该服务每日更新并有请求限制，其汇率只用于信息与示例用途。

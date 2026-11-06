@@ -1,6 +1,7 @@
 name: 市场检查
 on:
   pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,7 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           # Managed by node scripts/repository-config.mjs sync.
-          SELECTED_HOST_REF: ${{ vars.STARTER_HOST_REF || 'develop' }}
+          SELECTED_HOST_REF: ${{ vars.STARTER_HOST_REF || 'main' }}
           FORCE_MARKET_CHECKS: ${{ github.event_name == 'workflow_dispatch' }}
         run: node scripts/ci-plan.mjs
       - name: 脚本与插件界面回归

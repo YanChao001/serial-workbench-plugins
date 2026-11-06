@@ -48,7 +48,7 @@ const catalog = {
           name: "计算器",
           id: "example.calculator",
           version: "1.2.0",
-          minHostVersion: "0.1.7",
+          minHostVersion: "0.1.0",
         },
       },
     },
@@ -121,7 +121,7 @@ test("fixed release sections classify commits and surface breaking changes", () 
   );
   assert.ok(notes.includes("需要显式重新导入"));
   assert.ok(!notes.includes("Refs: #42"));
-  assert.ok(notes.includes("| 计算器（example.calculator） | 1.2.0 | 0.1.7 |"));
+  assert.ok(notes.includes("| 计算器（example.calculator） | 1.2.0 | 0.1.0 |"));
   assert.ok(notes.includes("2023-11-14T22:13:20.000Z"));
   assert.ok(notes.includes(`/compare/market-10...${sha}`));
   assert.ok(notes.includes(`/commit/${commits[0].sha}`));

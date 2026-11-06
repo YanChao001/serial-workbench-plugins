@@ -1,11 +1,12 @@
-import { mkdtemp, realpath, rm } from "node:fs/promises";
+import { mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { mkdtempSync, writeFileSync, rmSync, rmdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { validateCatalog, validRepository } from "./protocol.mjs";
 import { verifyRelease } from "./verify.mjs";
-import { parseJson, readBounded } from "./files.mjs";
+import { ensureDirectory, parseJson, readBounded } from "./files.mjs";
+import { projectLicenseFiles } from "./build.mjs";
 import { createReleaseNotes, runGit } from "./release-notes.mjs";
 import { createHosting } from "./hosting.mjs";
 import { readRepositoryConfig } from "./repository-config.mjs";
@@ -33,6 +34,14 @@ export async function publish(
     ).repository;
     if (catalog.repository !== repository)
       throw new Error("Invalid release repository");
+    for (const path of projectLicenseFiles) {
+      await ensureDirectory(dirname(join(snapshot, path)));
+      await writeFile(
+        join(snapshot, path),
+        await readBounded(join(root, path), 64 * 1024),
+        { flag: "wx" },
+      );
+    }
     publishCatalog(catalog, snapshot, hosting.sourceSha(), run, {
       git,
       config,
@@ -116,7 +125,11 @@ export function publishCatalog(
   hosting.uploadAssets({
     repository,
     tag,
-    assets: [join(directory, "catalog.json"), ...assets],
+    assets: [
+      join(directory, "catalog.json"),
+      ...assets,
+      ...projectLicenseFiles.map((path) => join(directory, path)),
+    ],
   });
   // Recheck after upload in case the remote tag was created or moved in the meantime.
   hosting.verifyTagSource(repository, tag, sourceSha);
