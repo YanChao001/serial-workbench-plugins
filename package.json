@@ -1,0 +1,18 @@
+{
+  "name": "serial-workbench-plugins",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "repository:sync": "node scripts/repository-config.mjs sync",
+    "repository:check": "node scripts/repository-config.mjs check",
+    "test": "node --test scripts/*.test.mjs plugins/*/ui/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "verify": "node scripts/verify.mjs"
+  }
+}

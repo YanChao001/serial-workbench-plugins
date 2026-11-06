@@ -1,0 +1,423 @@
+[
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": null,
+      "state": "",
+      "fields": {},
+      "locale": "zh-CN",
+      "host": {
+        "permissions": [],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectJsonSubset": {
+      "version": 2,
+      "display": "壁纸库",
+      "effects": [],
+      "artifacts": []
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": null,
+      "state": "",
+      "fields": {},
+      "locale": "en",
+      "host": {
+        "permissions": [],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectJsonSubset": {
+      "display": "Wallpaper Library",
+      "effects": []
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "search",
+      "state": "",
+      "fields": {
+        "provider": "bizhihui"
+      },
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectJsonSubset": {
+      "effects": [
+        {
+          "kind": "http",
+          "id": "wallpaper-bizhihui-1-0",
+          "request": {
+            "url": "https://www.bizhihui.com/",
+            "method": "GET",
+            "headers": {
+              "Accept": "text/html",
+              "User-Agent": "SerialWorkbenchWallpaper/2.0 (https://github.com/YanChao001/serial-workbench-plugins)"
+            },
+            "body": null,
+            "credential": null
+          }
+        }
+      ]
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "search",
+      "state": "",
+      "fields": {
+        "provider": "wallcoo"
+      },
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectJsonSubset": {
+      "effects": [
+        {
+          "kind": "http",
+          "id": "wallpaper-wallcoo-1-0",
+          "request": {
+            "url": "https://www.wallcoo.com/wp-json/bc/v1/wallpapers?page=1&per_page=24",
+            "method": "GET",
+            "headers": {
+              "Accept": "application/json",
+              "User-Agent": "SerialWorkbenchWallpaper/2.0 (https://github.com/YanChao001/serial-workbench-plugins)"
+            },
+            "body": null,
+            "credential": null
+          }
+        }
+      ]
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "search",
+      "state": "",
+      "fields": {
+        "provider": "wallpaperscraft"
+      },
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectJsonSubset": {
+      "effects": [
+        {
+          "kind": "http",
+          "id": "wallpaper-wallpaperscraft-1-0",
+          "request": {
+            "url": "https://wallpaperscraft.com/all/1920x1080",
+            "method": "GET",
+            "headers": {
+              "Accept": "text/html",
+              "User-Agent": "SerialWorkbenchWallpaper/2.0 (https://github.com/YanChao001/serial-workbench-plugins)"
+            },
+            "body": null,
+            "credential": null
+          }
+        }
+      ]
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "search",
+      "state": "",
+      "fields": {
+        "provider": "goodfon"
+      },
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectJsonSubset": {
+      "effects": [
+        {
+          "kind": "http",
+          "id": "wallpaper-goodfon-1-0",
+          "request": {
+            "url": "https://www.goodfon.com/",
+            "method": "GET",
+            "headers": {
+              "Accept": "text/html",
+              "User-Agent": "SerialWorkbenchWallpaper/2.0 (https://github.com/YanChao001/serial-workbench-plugins)"
+            },
+            "body": null,
+            "credential": null
+          }
+        }
+      ]
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "host-result",
+      "state": "{\"schema\":4,\"provider\":\"bizhihui\",\"query\":\"\",\"category\":\"all\",\"page\":0,\"sequence\":1,\"items\":[],\"hasMore\":true,\"seen\":[],\"pending\":{\"provider\":\"wallcoo\",\"query\":\"\",\"category\":\"all\",\"page\":1,\"sequence\":1,\"resetHistory\":true},\"error\":\"\"}",
+      "fields": {},
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": [
+        {
+          "id": "wallpaper-wallcoo-1-0",
+          "value": {
+            "url": "https://www.wallcoo.com/wp-json/bc/v1/wallpapers?page=1&per_page=24",
+            "status": 200,
+            "headers": {},
+            "body": "{\"items\":[{\"id\":260612,\"title\":\"Avebury stones at dawn\",\"link\":\"https://www.wallcoo.com/landscape/avebury-stones-at-dawn-4k-wallpaper/\",\"url\":\"https://www.wallcoo.com/wp-content/uploads/wallcoo/2026/10/w5/thumb_th-cqewj8.jpg\",\"largeUrl\":\"https://www.wallcoo.com/wp-content/uploads/wallcoo/2026/10/w5/preview_th-cqewj8.webp\"}],\"pagination\":{\"current_page\":1,\"per_page\":24,\"total_pages\":1,\"total_items\":1,\"has_more\":false}}"
+          },
+          "error": null
+        }
+      ]
+    },
+    "expectJsonSubset": {
+      "effects": [],
+      "errors": {},
+      "blocks": [
+        {
+          "kind": "metrics",
+          "items": [
+            {
+              "label": "Images",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "host-result",
+      "state": "{\"schema\":4,\"provider\":\"bizhihui\",\"query\":\"\",\"category\":\"all\",\"page\":0,\"sequence\":1,\"items\":[],\"hasMore\":true,\"seen\":[],\"pending\":{\"provider\":\"wallcoo\",\"query\":\"\",\"category\":\"all\",\"page\":1,\"sequence\":1,\"resetHistory\":true},\"error\":\"\"}",
+      "fields": {},
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": [
+        {
+          "id": "wallpaper-wallcoo-1-0",
+          "value": {
+            "url": "https://www.wallcoo.com/wp-json/bc/v1/wallpapers?page=1&per_page=24",
+            "status": 429,
+            "headers": {},
+            "body": ""
+          },
+          "error": null
+        }
+      ]
+    },
+    "expectJsonSubset": {
+      "effects": [],
+      "errors": {
+        "provider": "The source is rate limited. Refresh later or choose another source."
+      }
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "host-result",
+      "state": "{\"schema\":4,\"provider\":\"bizhihui\",\"query\":\"\",\"category\":\"all\",\"page\":0,\"sequence\":1,\"items\":[],\"hasMore\":true,\"seen\":[],\"pending\":{\"provider\":\"wallcoo\",\"query\":\"\",\"category\":\"all\",\"page\":1,\"sequence\":1,\"resetHistory\":true},\"error\":\"\"}",
+      "fields": {},
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": [
+        {
+          "id": "wallpaper-wallcoo-1-0",
+          "value": {
+            "url": "https://www.wallcoo.com/wp-json/bc/v1/wallpapers?page=1&per_page=24",
+            "status": 200,
+            "headers": {},
+            "body": "<html>Verify you are human</html>"
+          },
+          "error": null
+        }
+      ]
+    },
+    "expectJsonSubset": {
+      "effects": [],
+      "errors": {
+        "provider": "Wallpaper loading failed. Check your connection or choose another source."
+      }
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "search",
+      "state": "",
+      "fields": {
+        "provider": "bizhihui"
+      },
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "wallpapers:manage"
+        ],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectJsonSubset": {
+      "effects": [],
+      "errors": {
+        "provider": "Grant HTTPS network access to load wallpapers. The local gallery remains available."
+      }
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "host-result",
+      "state": "{\"schema\":4,\"provider\":\"bizhihui\",\"query\":\"\",\"category\":\"all\",\"page\":0,\"sequence\":1,\"items\":[],\"hasMore\":true,\"seen\":[],\"pending\":{\"provider\":\"wallcoo\",\"query\":\"\",\"category\":\"all\",\"page\":1,\"sequence\":1,\"resetHistory\":true},\"error\":\"\"}",
+      "fields": {},
+      "locale": "en",
+      "host": {
+        "permissions": [],
+        "storage": null
+      },
+      "results": [
+        {
+          "id": "wallpaper-wallcoo-1-0",
+          "value": {
+            "url": "https://www.wallcoo.com/wp-json/bc/v1/wallpapers?page=1&per_page=24",
+            "status": 200,
+            "headers": {},
+            "body": "{\"items\":[{\"id\":260612,\"title\":\"Avebury stones at dawn\",\"link\":\"https://www.wallcoo.com/landscape/avebury-stones-at-dawn-4k-wallpaper/\",\"url\":\"https://www.wallcoo.com/wp-content/uploads/wallcoo/2026/10/w5/thumb_th-cqewj8.jpg\",\"largeUrl\":\"https://www.wallcoo.com/wp-content/uploads/wallcoo/2026/10/w5/preview_th-cqewj8.webp\"}],\"pagination\":{\"current_page\":1,\"per_page\":24,\"total_pages\":1,\"total_items\":1,\"has_more\":false}}"
+          },
+          "error": null
+        }
+      ]
+    },
+    "expectJsonSubset": {
+      "effects": [],
+      "errors": {
+        "provider": "Grant HTTPS network access to load wallpapers. The local gallery remains available."
+      }
+    }
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "search",
+      "state": "",
+      "fields": {
+        "provider": "upx8"
+      },
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectError": "EXTENSION_RUN_FAILED"
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": "host-result",
+      "state": "{\"schema\":4,\"provider\":\"bizhihui\",\"query\":\"\",\"category\":\"all\",\"page\":0,\"sequence\":1,\"items\":[],\"hasMore\":true,\"seen\":[],\"pending\":{\"provider\":\"wallcoo\",\"query\":\"\",\"category\":\"all\",\"page\":1,\"sequence\":1,\"resetHistory\":true},\"error\":\"\"}",
+      "fields": {},
+      "locale": "en",
+      "host": {
+        "permissions": [
+          "network:https"
+        ],
+        "storage": null
+      },
+      "results": [
+        {
+          "id": "forged",
+          "value": {
+            "url": "https://www.wallcoo.com/wp-json/bc/v1/wallpapers?page=1&per_page=24",
+            "status": 200,
+            "headers": {},
+            "body": "{\"items\":[{\"id\":260612,\"title\":\"Avebury stones at dawn\",\"link\":\"https://www.wallcoo.com/landscape/avebury-stones-at-dawn-4k-wallpaper/\",\"url\":\"https://www.wallcoo.com/wp-content/uploads/wallcoo/2026/10/w5/thumb_th-cqewj8.jpg\",\"largeUrl\":\"https://www.wallcoo.com/wp-content/uploads/wallcoo/2026/10/w5/preview_th-cqewj8.webp\"}],\"pagination\":{\"current_page\":1,\"per_page\":24,\"total_pages\":1,\"total_items\":1,\"has_more\":false}}"
+          },
+          "error": null
+        }
+      ]
+    },
+    "expectError": "EXTENSION_RUN_FAILED"
+  },
+  {
+    "command": "browse",
+    "input": {
+      "version": 2,
+      "action": null,
+      "state": "{\"schema\":3,\"provider\":\"bizhihui\",\"query\":\"\",\"category\":\"all\",\"page\":0,\"sequence\":0,\"items\":[],\"hasMore\":true,\"seen\":[],\"pending\":null,\"error\":\"\"}",
+      "fields": {},
+      "locale": "en",
+      "host": {
+        "permissions": [],
+        "storage": null
+      },
+      "results": []
+    },
+    "expectError": "EXTENSION_RUN_FAILED"
+  }
+]

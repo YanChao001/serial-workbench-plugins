@@ -1,0 +1,7 @@
+artifacts/
+dist/
+target/
+node_modules/
+*.key
+*.pem
+.env*

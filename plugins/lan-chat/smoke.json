@@ -1,0 +1,139 @@
+[
+  {
+    "command": "chat",
+    "input": {
+      "version": 2,
+      "action": null,
+      "state": "",
+      "fields": {},
+      "locale": "zh-CN"
+    },
+    "expectJsonSubset": {
+      "version": 2,
+      "display": "内网通信",
+      "effects": [],
+      "artifacts": []
+    }
+  },
+  {
+    "command": "chat",
+    "input": {
+      "version": 2,
+      "action": "export",
+      "state": "{}",
+      "fields": {
+        "draft": "尚未发送",
+        "export": "[12:00] 小林：你好，局域网！\n"
+      },
+      "locale": "zh-CN"
+    },
+    "expectJsonSubset": {
+      "artifacts": [
+        {
+          "name": "lan-chat.txt",
+          "mediaType": "text/plain",
+          "encoding": "utf8",
+          "content": "[12:00] 小林：你好，局域网！\n"
+        }
+      ]
+    }
+  },
+  {
+    "command": "chat",
+    "input": {
+      "version": 2,
+      "action": null,
+      "state": "{}",
+      "fields": {},
+      "locale": "en"
+    },
+    "expectJsonSubset": {
+      "version": 2,
+      "display": "LAN Chat",
+      "effects": [],
+      "artifacts": []
+    }
+  },
+  {
+    "command": "chat",
+    "input": {
+      "version": 2,
+      "action": "export",
+      "state": "{}",
+      "fields": {
+        "draft": "Unsent draft",
+        "export": "<script>literal & safe</script> 🌍\r\n\t"
+      },
+      "locale": "en"
+    },
+    "expectJsonSubset": {
+      "display": "LAN Chat",
+      "artifacts": [
+        {
+          "name": "lan-chat.txt",
+          "mediaType": "text/plain",
+          "encoding": "utf8",
+          "content": "<script>literal & safe</script> 🌍\r\n\t"
+        }
+      ]
+    }
+  },
+  {
+    "command": "chat",
+    "input": {
+      "version": 2,
+      "action": "export",
+      "state": "{}",
+      "fields": {
+        "export": "[12:00] 小林：[图片] 假日.png (2048 B)\n[12:01] 阿周：[文件] 计划.txt (512 B)\n"
+      },
+      "locale": "zh-CN"
+    },
+    "expectJsonSubset": {
+      "display": "内网通信",
+      "artifacts": [
+        {
+          "name": "lan-chat.txt",
+          "mediaType": "text/plain",
+          "encoding": "utf8",
+          "content": "[12:00] 小林：[图片] 假日.png (2048 B)\n[12:01] 阿周：[文件] 计划.txt (512 B)\n"
+        }
+      ]
+    }
+  },
+  {
+    "command": "chat",
+    "input": {
+      "version": 2,
+      "action": "export",
+      "state": "{}",
+      "fields": {
+        "export": "Unsafe\u001bterminal control"
+      },
+      "locale": "en"
+    },
+    "expectError": "EXTENSION_RUN_FAILED"
+  },
+  {
+    "command": "chat",
+    "input": {
+      "version": 2,
+      "action": null,
+      "state": "{\"version\":3}",
+      "fields": {},
+      "locale": "en"
+    },
+    "expectError": "EXTENSION_RUN_FAILED"
+  },
+  {
+    "command": "chat",
+    "input": {
+      "version": 2,
+      "action": "send",
+      "state": "{}",
+      "fields": {},
+      "locale": "en"
+    },
+    "expectError": "EXTENSION_RUN_FAILED"
+  }
+]
