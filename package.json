@@ -4,26 +4,21 @@
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
-  "engines": {
-    "node": ">=24"
+  "description": "Foundation for the Serial Workbench Node plugin marketplace",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YanChao001/serial-workbench-plugins.git"
   },
-  "scripts": {
-    "repository:sync": "node scripts/repository-config.mjs sync",
-    "repository:check": "node scripts/repository-config.mjs check",
-    "test": "node --test scripts/*.test.mjs plugins/*/ui/*.test.mjs",
-    "build": "node scripts/build.mjs",
-    "check": "node scripts/check.mjs",
-    "verify": "node scripts/verify.mjs"
+  "homepage": "https://github.com/YanChao001/serial-workbench-plugins",
+  "bugs": {
+    "url": "https://github.com/YanChao001/serial-workbench-plugins/issues"
+  },
+  "engines": {
+    "node": "26.13.0"
   },
   "keywords": [
     "serial-workbench",
     "plugin-marketplace",
-    "wasm",
-    "webassembly",
-    "wasm-plugins",
-    "extism",
-    "rust",
-    "tauri",
-    "plugin-system"
+    "nodejs"
   ]
 }
