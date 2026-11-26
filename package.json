@@ -5,6 +5,9 @@
   "type": "module",
   "license": "Apache-2.0",
   "description": "Foundation for the Serial Workbench Node plugin marketplace",
+  "scripts": {
+    "test": "node --test"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/YanChao001/serial-workbench-plugins.git"
