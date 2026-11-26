@@ -1,6 +1,6 @@
 # AGENTS.md
 
-适用于独立市场仓库及子模块检出。先读 [README](./README.md)和[贡献流程](./CONTRIBUTING.md)，当前没有可运行的构建/测试工具。
+适用于独立市场仓库及子模块检出。先读 [README](./README.md)和[贡献流程](./CONTRIBUTING.md)。
 
 - 只按实际实现建立新 Node 契约、SDK 和市场工具，区分当前功能与阶段计划。
 - 涉及来源、依赖、凭据或外部服务，读取[安全规范](./docs/security.md)；第三方内容保留许可与归属。
